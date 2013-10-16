@@ -9,22 +9,12 @@
 static Function IgorStartOrNewHook(igorApplicationNameStr)
 	string igorApplicationNameStr
 	
-	DoWindow $GetPanel()
-	if(V_flag == 0)
-		return 0
-	endif
-
 	setHooksAndUpdate()
 	return 0
 End
 
 static Function IgorQuitHook(igorApplicationNameStr)
 	string igorApplicationNameStr
-	
-	DoWindow $GetPanel()
-	if(V_flag == 0)
-		return 0
-	endif
 
 	preparePanelClose()
 	return 0
@@ -32,11 +22,6 @@ End
 
 static Function IgorBeforeNewHook(igorApplicationNameStr)
 	string igorApplicationNameStr
-	
-	DoWindow $GetPanel()
-	if(V_flag == 0)
-		return 0
-	endif
 
 	preparePanelClose()
 	return 0
@@ -47,13 +32,21 @@ Function setHooksAndUpdate()
 	
 	// prevent multiple hooks of the same function
 	SetIgorHook/K AfterCompiledHook=updatePanel
+
 	SetIgorHook   AfterCompiledHook=updatePanel
+	debugprint("SetIgorHook AfterCompiledHook: " + S_info)
 	updatePanel()
 End
 
 // Prepare for panel closing, must be called before the panel is killed or the experiment closed
 Function preparePanelClose()
-	SetIgorHook/K AfterCompiledHook = updatePanel
+	SetIgorHook/K AfterCompiledHook=updatePanel
+	debugprint("SetIgorHook AfterCompiledHook: " + S_info)
+
+	DoWindow $GetPanel()
+	if(V_flag == 0)
+		return 0
+	endif
 
 	// save panel coordinates to disk
 	STRUCT CodeBrowserPrefs prefs
@@ -61,7 +54,6 @@ Function preparePanelClose()
 	SavePackagePrefsToDisk(prefs)
 End
 
-// Window hook for the panel, removes the AfterCompiledHook on panel close and saves the panel coordinates
 Function panelHook(s)
 	STRUCT WMWinHookStruct &s
 
