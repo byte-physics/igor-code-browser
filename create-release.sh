@@ -22,9 +22,9 @@ mkdir -p $folder
 
 cp -r $filesToWatch $folder
 
-git rev-parse $revision > internalVersion
+git rev-parse HEAD > internalVersion
 
-cd releases && zip -m -z -q -r $basename.zip $basename/* < ../internalVersion && cd ..
+cd releases && zip -m -z -q -r $zipFile $basename/* < ../internalVersion && cd ..
 
 rmdir $folder
 rm internalVersion
