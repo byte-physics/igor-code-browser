@@ -108,11 +108,11 @@ Function/S interpretParamType(ptype, paramOrReturn)
 			typeStr += "/U"
 		endif
 
-		if(debuggingEnabled)
-			string msg
-			sprintf msg, "type:%d, str:%s", ptype, typeStr
-			debugPrint(msg)
-		endif
+//		if(debuggingEnabled)
+//			string msg
+//			sprintf msg, "type:%d, str:%s", ptype, typeStr
+//			debugPrint(msg)
+//		endif
 		
 		return typeStr
 	endif
@@ -447,13 +447,19 @@ Function/S getProcWindows(regexp,options)
 	return SortList(procListClean,";",4)
 End
 
-// Returns a list of independent modules including ProcGlobal but skipping WM modules
+// Returns a list of independent modules
+// Includes ProcGlobal but skips all WM modules and the current module in release mode
 Function/S getModuleList()
 
 	string moduleList
 			
 	moduleList = IndependentModuleList(";")
 	moduleList = ListMatch(moduleList,"!WM*",";") // skip WM modules
+	string module = GetIndependentModuleName()
+	
+	if(!debuggingEnabled && !isProcGlobal(module))
+		moduleList = ListMatch(moduleList,"!" + module,";") // skip current module
+	endif
 	moduleList = "ProcGlobal;" + SortList(moduleList)
 
 	return moduleList
@@ -525,7 +531,7 @@ End
 Function/S getProcList(module)
 	string module
 
-	if( cmpstr(module,"ProcGlobal") == 0 )
+	if( isProcGlobal(module) )
 		return getGlobalProcWindows()
 	else
   		return getIMProcWindows(module)

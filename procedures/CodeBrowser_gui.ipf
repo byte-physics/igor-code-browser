@@ -163,7 +163,7 @@ Function/S getCurrentItem([module, procedure, procedureWithSuffix, procedureWith
 		if(procedureWithModule)
 			string moduleName = getCurrentItem(module=1)
 			// work around FunctionList not accepting Procedure.ipf [ProcGlobal]
-			if(cmpstr(moduleName,"ProcGlobal") == 0 && cmpstr(windowName,"Procedure") == 0)
+			if(isProcGlobal("ProcGlobal") && cmpstr(windowName,"Procedure") == 0)
 				return windowName + " [" + moduleName + "]"
 			else
 				return windowName + ".ipf [" + moduleName + "]"

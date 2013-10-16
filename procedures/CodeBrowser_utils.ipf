@@ -13,6 +13,12 @@ Function isEmpty(str)
 	return !(strlen(str) > 0)
 End
 
+Function isProcGlobal(module)
+	string module
+	
+	return cmpstr(module,"ProcGlobal") == 0
+End
+
 // Returns the dimension of the first screen
 Function GetScreenDimensions(rect)
 	STRUCT RECT &rect
@@ -48,7 +54,7 @@ Function debugPrint(msg)
 	string msg
 	
 	if(debuggingEnabled)
-		printf "%s(...): %s\r", GetRTStackInfo(2), msg
+		printf "%s(...): %s\r", GetRTStackInfo(2), RemoveEnding(msg,"\r")
 	endif
 End
 
