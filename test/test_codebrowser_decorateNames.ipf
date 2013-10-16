@@ -2,8 +2,8 @@
 #pragma ModuleName=CodeBrowser_decorateNames
 
 StrConstant module         = "ProcGlobal"
-StrConstant procedureShort = "TestCodeBrowser_input.ipf"
-StrConstant procedure      = "TestCodeBrowser_input.ipf [ProcGlobal]"
+StrConstant procedureShort = "test_codebrowser_input.ipf"
+StrConstant procedure      = "test_codebrowser_input.ipf [ProcGlobal]"
 
 static Function TEST_CASE_BEGIN_OVERRIDE(name)
 	string name
@@ -65,7 +65,7 @@ static Function retRealVar_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetRealVar", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(var)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> var",0),-1)
 End
 
 static Function retRealVarComp_wo_args()
@@ -75,7 +75,7 @@ static Function retRealVarComp_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetRealVarComp", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(var)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> var",0),-1)
 End
 
 static Function retComplexVar_wo_args()
@@ -85,7 +85,7 @@ static Function retComplexVar_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetComplexVar", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(imag)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> imag",0),-1)
 End
 
 static Function retStr_wo_args()
@@ -95,7 +95,7 @@ static Function retStr_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetStr", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(str)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> str",0),-1)
 End
 
 static Function retNumericWave_wo_args()
@@ -105,7 +105,7 @@ static Function retNumericWave_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetNumericWave", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(wave)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> wave",0),-1)
 End
 
 static Function retTextWave_wo_args()
@@ -115,7 +115,7 @@ static Function retTextWave_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetTextWave", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(wave)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> wave",0),-1)
 End
 
 static Function retDF_wo_args()
@@ -125,7 +125,7 @@ static Function retDF_wo_args()
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetDF", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"->(dfref)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1]," -> dfref",0),-1)
 End
 
 static Function withArgs()
@@ -136,7 +136,7 @@ static Function withArgs()
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
 	string actual = defWave[0][1]
-	string expected = "funcWithArgs(var, str, wave, wave/T, dfref, funcref)->(var)"
+	string expected = "funcWithArgs(var, str, wave, wave/T, dfref, funcref) -> var"
 	CHECK_EQUAL_STR(actual, expected)
 End
 
@@ -148,7 +148,7 @@ static Function withComplexArgs()
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
 	string actual = defWave[0][1]
-	string expected = "funcWithComplexArgs(imag, wave/C)->(var)"
+	string expected = "funcWithComplexArgs(imag, wave/C) -> var"
 	CHECK_EQUAL_STR(actual, expected)
 End
 
@@ -160,7 +160,7 @@ static Function withArgsPassByRef()
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
 	string actual = defWave[0][1]
-	string expected = "funcWithArgsPassByRef(struct&, var&, imag&, str&)->(var)"
+	string expected = "funcWithArgsPassByRef(struct&, var&, imag&, str&) -> var"
 	CHECK_EQUAL_STR(actual, expected)
 End
 
@@ -172,7 +172,7 @@ static Function withFancyWaves()
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
 	string actual = defWave[0][1]
-	string expected = "funcWithFancyWaves(wave/DF, wave/WAVE, wave/W, wave/W/U, wave/I, wave/I/U, wave/B, wave/B/U, wave, wave/D)->(var)"
+	string expected = "funcWithFancyWaves(wave/DF, wave/WAVE, wave/W, wave/W/U, wave/I, wave/I/U, wave/B, wave/B/U, wave, wave/D) -> var"
 	CHECK_EQUAL_STR(actual, expected)
 End
 
@@ -183,7 +183,7 @@ static Function withOnlyOptArg()
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithOnlyOptArg", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"funcWithOnlyOptArg([var])->(var)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1],"funcWithOnlyOptArg([var]) -> var",0),-1)
 End
 
 static Function withOptArgs()
@@ -193,7 +193,7 @@ static Function withOptArgs()
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithOptArgs", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
-	CHECK_NEQ_VAR(strsearch(defWave[0][1],"funcWithOptArgs(var, [var, str, var&, str&])->(var)",0),-1)
+	CHECK_NEQ_VAR(strsearch(defWave[0][1],"funcWithOptArgs(var, [var, str, var&, str&]) -> var",0),-1)
 End
 
 static Function getDecoratedMacroList_1()
