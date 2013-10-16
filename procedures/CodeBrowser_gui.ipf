@@ -17,6 +17,8 @@ static StrConstant moduleCtrl	= "popupNamespace"
 static StrConstant procCtrl  	= "popupProcedure"
 static StrConstant listCtrl   = "list1"
 
+static StrConstant oneTimeInitUserData = "oneTimeInit"
+
 Function/S GetPanel()
 	return panel
 End
@@ -58,7 +60,7 @@ Function createPanel()
 	SetWindow $panel, hook(mainHook)=$(module + "#panelHook")
 	DoUpdate/W=$panel
 
-	setHooksAndUpdate()
+	initializePanel()
 	resizePanel()
 End
 
@@ -96,7 +98,6 @@ Function updatePanel()
 
 	DoWindow $panel
 	if(V_flag == 0)
-		debugPrint("Main panel does not exist")
 		return 0
 	endif
 
@@ -110,10 +111,39 @@ Function updatePanel()
 
 	string module = S_value
 	updatePopup(procCtrl,getProcList(module))
-
 	updateListBoxHook()
 
 	return 0
+End
+
+Function markAsUnInitialized()
+
+	DoWindow $panel
+	if(V_flag == 0)
+		return 0
+	endif
+
+	SetWindow $panel, userdata($oneTimeInitUserData)=""
+End
+
+Function markAsInitialized()
+
+	DoWindow $panel
+	if(V_flag == 0)
+		return 0
+	endif
+
+	SetWindow $panel, userdata($oneTimeInitUserData)="1"
+End
+
+Function isInitialized()
+
+	DoWindow $panel
+	if(V_flag == 0)
+		return 0
+	endif
+
+	return cmpstr(GetUserData(panel,"",oneTimeInitUserData),"1") == 0
 End
 
 // Returns the currently selected item from the panel defined by the optional arguments.
@@ -282,10 +312,6 @@ Function listBoxProc(lba) : ListBoxControl
 				// forcefully deselect column zero if it is selected
 				ListBox $listCtrl, win=$panel, selCol=1
 			endif
-			break
-		case 6: // begin edit
-//			break
-		case 7: // finish edit
 			break
 		case 12: // keystroke
 			if(!WaveExists(listWave))

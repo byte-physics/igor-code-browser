@@ -6,14 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Function IgorStartOrNewHook(igorApplicationNameStr)
-	string igorApplicationNameStr
-
-	setHooksAndUpdate()
-	return 0
-End
-
-static Function IgorQuitHook(igorApplicationNameStr)
+static Function IgorBeforeQuitHook(igorApplicationNameStr)
 	string igorApplicationNameStr
 
 	preparePanelClose()
@@ -27,21 +20,30 @@ static Function IgorBeforeNewHook(igorApplicationNameStr)
 	return 0
 End
 
-Function setHooksAndUpdate()
+static Function BeforeExperimentSaveHook(rN,fileName,path,type,creator,kind)
+	Variable rN,kind
+	String fileName,path,type,creator
+
+	markAsUnInitialized()
+	return 0
+End
+
+Function initializePanel()
+
+	debugprint("called")
+
 	Execute/Q "SetIgorOption IndependentModuleDev=1"
 
-	// prevent multiple hooks of the same function
-	SetIgorHook/K AfterCompiledHook=updatePanel
-
-	SetIgorHook   AfterCompiledHook=updatePanel
-	debugprint("SetIgorHook AfterCompiledHook: " + S_info)
+	SetIgorHook AfterCompiledHook=updatePanel
+	debugprint("AfterCompiledHook: " + S_info)
 	updatePanel()
 End
 
 // Prepare for panel closing, must be called before the panel is killed or the experiment closed
 Function preparePanelClose()
+
 	SetIgorHook/K AfterCompiledHook=updatePanel
-	debugprint("SetIgorHook AfterCompiledHook: " + S_info)
+	debugprint("AfterCompiledHook: " + S_info)
 
 	DoWindow $GetPanel()
 	if(V_flag == 0)
@@ -60,6 +62,14 @@ Function panelHook(s)
 	Variable hookResult = 0
 
 	switch(s.eventCode)
+		case 0:				// activate
+			if(isInitialized())
+				break
+			endif
+			initializePanel()
+			markAsUnInitialized()
+			hookResult = 1
+			break
 		case 2:				// kill
 			preparePanelClose()
 			hookResult = 1
