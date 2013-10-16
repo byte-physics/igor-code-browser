@@ -22,19 +22,19 @@ End
 
 Function/Wave funcRetNumericWave()
 	Wave/D/Z wv
-	
-	return wv	
+
+	return wv
 End
 
 Function/Wave funcRetTextWave()
 	Wave/T/Z wv
-	
-	return wv	
+
+	return wv
 End
 
 Function/df funcRetDF()
 	dfref dfr = root
-	
+
 	return dfr
 End
 
@@ -64,13 +64,13 @@ Function funcWithArgsPassByRef(s, var, complexVar, str)
 	variable &var
 	variable/C &complexVar
 	string &str
-End 
+End
 
 Function funcWithFancyWaves(df, waveWave, signedInt16, unsignedInt16, signedInt32, unsignedInt32, byte, unsignedByte, realWave, doubleWave)
 	Wave/DF df
 	Wave/Wave waveWave
 	Wave/W signedInt16
-	Wave/W/U unsignedInt16	
+	Wave/W/U unsignedInt16
 	Wave/I signedInt32
 	Wave/I/U unsignedInt32
 	Wave/B byte

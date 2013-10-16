@@ -3,7 +3,7 @@
 
 static Function getShortFuncOrMacroName_empty()
 	string decl = ""
-	
+
 	string expected = ""
 	string actual   = CodeBrowserModule#getShortFuncOrMacroName(decl)
 	CHECK_EQUAL_STR(expected,actual)
@@ -11,7 +11,7 @@ End
 
 static Function getShortFuncOrMacroName_func()
 	string decl = "myFunc() abcdefg()"
-	
+
 	string expected = "myFunc"
 	string actual   = CodeBrowserModule#getShortFuncOrMacroName(decl)
 	CHECK_EQUAL_STR(expected,actual)
@@ -19,7 +19,7 @@ End
 
 static Function getShortFuncOrMacroName_nobrac()
 	string decl = "myFunc"
-	
+
 	string expected = "myFunc"
 	string actual   = CodeBrowserModule#getShortFuncOrMacroName(decl)
 	CHECK_EQUAL_STR(expected,actual)

@@ -43,7 +43,7 @@ static Function SyncPackagePrefsStruct(prefs)
 
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
-	
+
 	GetWindow $GetPanel() wsize
 	// NewPanel uses device coordinates. We therefore need to scale from
 	// points (returned by GetWindow) to device units for windows created

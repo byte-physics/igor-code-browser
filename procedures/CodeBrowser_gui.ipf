@@ -29,17 +29,17 @@ Function createPanel()
 		DoWindow/F $panel
 		return NaN
 	endif
-	
+
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
-	
+
 	variable left   = prefs.panelCoords[0]
 	variable top    = prefs.panelCoords[1]
 	variable right  = prefs.panelCoords[2]
 	variable bottom = prefs.panelCoords[3]
-	
+
 	NewPanel/N=$panel /K=1/W=(left,top,right,bottom)
-	
+
 	string module = GetIndependentModuleName()
 
 	PopupMenu $moduleCtrl,	 win=$panel,pos={30,moduleCtrlTop}, size={popupLength,20}, bodywidth=200
@@ -74,10 +74,10 @@ Function resizePanel()
 	GetWindow $panel, wsizeDC
 	width  = V_right - V_left
 	height = V_bottom - V_top
-	
+
 	listBoxWidth  = width  - 2*border
 	listBoxHeight = height - border - topSpaceList
-	
+
 	if(listBoxHeight < 40)
 		return NaN
 	endif
@@ -110,9 +110,9 @@ Function updatePanel()
 
 	string module = S_value
 	updatePopup(procCtrl,getProcList(module))
-	
+
 	updateListBoxHook()
-	
+
 	return 0
 End
 
@@ -126,18 +126,18 @@ End
 // index: Zero-based index into main listbox
 Function/S getCurrentItem([module, procedure, procedureWithSuffix, procedureWithModule, index])
 	variable module, procedure, procedureWithSuffix, procedureWithModule, index
-	
+
 	module              =  ParamIsDefault(module)              ? 0 : 1
-	procedure           =  ParamIsDefault(procedure)           ? 0 : 1 
+	procedure           =  ParamIsDefault(procedure)           ? 0 : 1
 	procedureWithSuffix =  ParamIsDefault(procedureWithSuffix) ? 0 : 1
 	procedureWithModule =  ParamIsDefault(procedureWithModule) ? 0 : 1
 	index               =  ParamIsDefault(index)               ? 0 : 1
-	
+
 	// only one optional argument allowed
 	if(module + procedure + procedureWithSuffix + procedureWithModule + index != 1)
 		return "_error_"
 	endif
-	
+
 	if(module)
 		ControlInfo/W=$panel $moduleCtrl
 
@@ -151,15 +151,15 @@ Function/S getCurrentItem([module, procedure, procedureWithSuffix, procedureWith
 			return num2str(V_Value)
 		endif
 	elseif(procedure || procedureWithModule || procedureWithSuffix)
-	
+
 		ControlInfo/W=$panel $procCtrl
-		
+
 		if(V_Value <= 0)
 			return "_error_"
 		endif
-	
+
 		string windowName = S_value
-	
+
 		if(procedureWithModule)
 			string moduleName = getCurrentItem(module=1)
 			// work around FunctionList not accepting Procedure.ipf [ProcGlobal]
@@ -184,11 +184,11 @@ Function updatePopup(ctrlName,list)
 	string ctrlName, list
 
 	string quotedList
-	
+
 	ControlInfo/W=$panel $ctrlName
 	variable index    = V_Value - 1
 	string   itemText = ""
-	
+
 	if(!isEmpty(S_Value))
 		itemText = S_Value
 	endif
@@ -200,7 +200,7 @@ Function updatePopup(ctrlName,list)
 		quotedList = quoteString(list)
 		PopupMenu $ctrlName win=$panel, disable=0, value=#quotedList
 	endif
-	
+
 	// choose the first element if we can't restore or would restore to the wrong argument
 	if( !(index > 0) || index >= ItemsInList(list) || cmpstr(itemText,StringFromList(index,list)) != 0)
 		PopupMenu $ctrlName win=$panel, mode=1
@@ -214,7 +214,7 @@ Function popupModules(pa) : PopupMenuControl
 
 	switch( pa.eventCode )
 		case 2: // mouse up
-		
+
 			string module = pa.popStr
 
 			if( isEmpty(module) )
@@ -246,7 +246,7 @@ Function popupProcedures(pa) : PopupMenuControl
 			if(updateListBoxHook() == 0)
 				showCode(procedure)
 			endif
-			break		
+			break
 	endswitch
 
 	return 0
@@ -271,7 +271,7 @@ Function listBoxProc(lba) : ListBoxControl
 			if(!WaveExists(listWave) || row >= DimSize(listWave,0))
 				return 0
 			endif
-		
+
 			procedure = getCurrentItem(procedureWithModule=1)
 			showCode(procedure, index=row)
 			break
@@ -291,7 +291,7 @@ Function listBoxProc(lba) : ListBoxControl
 			if(!WaveExists(listWave))
 				return 0
 			endif
-			
+
 			if(debuggingEnabled)
 				string	str
 				sprintf str, "keycode=%d,char=%s\r", row, num2char(row)

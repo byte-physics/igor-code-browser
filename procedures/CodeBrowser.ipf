@@ -28,11 +28,11 @@ StrConstant overrideTSFunctionColor= "26368,0,52224"     // purple
 StrConstant pkgFolder         = "root:Packages:CodeBrowser"
 // 2D Wave
 // first column : marker depending on the function/macro type
-// second column: full declaration of the  function/macro 
+// second column: full declaration of the  function/macro
 // one row for each function/macro
 StrConstant declarations      = "declarations"
 // 1D Wave in each row having the line of the function or -1 for macros
-StrConstant declarationLines  = "lines" 
+StrConstant declarationLines  = "lines"
 Constant    openKey           = 46 // ".", the dot
 Constant    debuggingEnabled  = 0
 
@@ -69,9 +69,9 @@ End
 // See the documentation for FunctionInfo for the exact values.
 Function/S interpretParamType(ptype, paramOrReturn)
 	variable ptype, paramOrReturn
-	
+
 	string typeStr = ""
-	
+
 	if(paramOrReturn != 0 && paramOrReturn != 1)
 		Abort "paramOrReturn must be 1 or 0"
 	endif
@@ -83,7 +83,7 @@ Function/S interpretParamType(ptype, paramOrReturn)
 		if (ptype & 0x1)
 			typeStr += "/C"
 		endif
-		
+
 		 // text wave for parameters only. Seems to be a bug in the documentation or Igor. Already reported to WM.
 		if(ptype == 0x4000 && paramOrReturn)
 			typeStr += "/T"
@@ -113,7 +113,7 @@ Function/S interpretParamType(ptype, paramOrReturn)
 //			sprintf msg, "type:%d, str:%s", ptype, typeStr
 //			debugPrint(msg)
 //		endif
-		
+
 		return typeStr
 	endif
 
@@ -123,7 +123,7 @@ Function/S interpretParamType(ptype, paramOrReturn)
 	elseif (ptype == 0x1005)
 		return "imag&"
 	endif
-	
+
 	if (ptype & 0x2000)
 		typeStr += "str"
 	elseif (ptype & 0x4)
@@ -143,14 +143,14 @@ Function/S interpretParamType(ptype, paramOrReturn)
 	if (ptype & 0x1000)
 		typeStr += "&"
 	endif
-	
+
 	return typeStr
 End
 
 // Convert the SPECIAL tag from FunctionInfo
 Function/S interpretSpecialTag(specialTag)
 	string specialTag
-	
+
 	strswitch(specialTag)
 		case "no":
 			return ""
@@ -164,7 +164,7 @@ End
 // Convert the THREADSAFE tag from FunctionInfo
 Function/S interpretThreadsafeTag(threadsafeTag)
 	string threadsafeTag
-	
+
 	strswitch(threadsafeTag)
 		case "yes":
 			return "threadsafe"
@@ -195,13 +195,13 @@ End
 // Returns a human readable interpretation of the function info string
 Function/S interpretParameters(funcInfo)
 	string funcInfo
-	
+
 	variable numParams = NumberByKey("N_PARAMS",funcInfo)
 	variable i
 	string str = "", key, paramType
-	
+
 	variable numOptParams = NumberByKey("N_OPT_PARAMS",funcInfo)
-	
+
 	for(i = 0; i < numParams; i+= 1)
 		sprintf key, "PARAM_%d_TYPE", i
 		paramType = interpretParamType(NumberByKey(key,funcInfo),1)
@@ -209,18 +209,18 @@ Function/S interpretParameters(funcInfo)
 		if(i == numParams - numOptParams)
 			str += "["
 		endif
-		
+
 		str += paramType
-		
+
 		if(i != numParams - 1 )
 			str += ", "
 		endif
 	endfor
-	
+
 	if(numOptParams > 0)
 		str +="]"
 	endif
-	
+
 	return str
 End
 
@@ -237,14 +237,14 @@ End
 // Creates a colored marker based on the function type
 Function/S createMarkerForType(type)
     string type
-	
+
 	if(cmpstr(type,"macro") == 0) // plain macro (they are always plain)
 		return getColorDef(plainColor) + macroMarker
 	elseif(cmpstr(type,"function") == 0) // plain function
 		return getColorDef(plainColor) + functionMarker
 	endif
-	
-	if(strsearch(type,"threadsafe",0) != -1) 
+
+	if(strsearch(type,"threadsafe",0) != -1)
 		if(strsearch(type,"static",0) != -1) // threadsafe + static
 			return getColorDef(tsStaticFunctionColor) + functionMarker
 		elseif(strsearch(type,"override",0) != -1) // threadsafe + override
@@ -262,18 +262,18 @@ End
 // Pretty printing of function/macro with additional info
 Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
 	string funcOrMacro, params, subtypeTag, returnType
-	
+
 	if(!isEmpty(subtypeTag))
 		subtypeTag = " : " + subtypeTag
 	endif
-			
+
 	string decl
 	if(ParamIsDefault(returnType))
 		sprintf decl, "%s(%s)%s", funcOrMacro, params, subtypeTag
 	else
 		sprintf decl, "%s(%s) -> %s%s", funcOrMacro, params, returnType, subtypeTag
 	endif
-	
+
 	return decl
 End
 
@@ -285,7 +285,7 @@ Function decorateFunctionNames(module, funcOrMacroList, procedure, declWave, lin
 
 	variable numItems = ItemsInList(funcOrMacroList)
 	Redimension/N=(numItems,-1) declWave, lineWave
-	
+
 	string funcOrMacro, funcDec, fi
 	string threadsafeTag, specialTag, params, subtypeTag, returnType
 	variable i
@@ -334,10 +334,10 @@ Function/S getMacroParams(mac,options)
 		if(!isEmpty(paramList))
 			return paramString
 		endif
-		
+
 		paramString +=", "
 	endfor
-	
+
 	return ""
 End
 
@@ -363,14 +363,14 @@ Function/S getDecoratedMacroList(procedure)
 		subType = StringFromList(i,subTypeList)
 		sprintf options, "SUBTYPE:%s,%s", subType, optionsAllSubtypes
 		maclist = MacroList("*",";",options)
-		
+
 		if( isEmpty(maclist) )
 			continue
 		endif
 
 		// remove all macros with a subtype from the allSubTypesList
 		allSubTypesList = RemoveFromList(macList,allSubTypesList)
-		
+
 		// iterate over all macros of one specific subtype
 		for(j=0; j < ItemsInList(macList);j+=1)
 			mac = StringFromList(j,macList)
@@ -386,7 +386,7 @@ Function/S getDecoratedMacroList(procedure)
 		paramString   = getMacroParams(mac,optionsAllSubtypes)
 		decoratedList = AddListItem( formatDecl(mac,paramString,subtype), decoratedList, ";")
 	endfor
-	
+
 	return decoratedList
 End
 
@@ -402,9 +402,9 @@ Function/S parseAllProcedureWindows()
 	options  = "KIND:18,WIN:" + procedureWithModule
 	funcList = FunctionList("*",";",options)
 	macList  = getDecoratedMacroList(procedureWithSuffix)
-	
+
 	list = SortList(funcList + macList,";",4)
-	
+
 	Wave/T decls = getDeclWave()
 	Wave/D lines = getLineWave()
 	decorateFunctionNames(module, list, procedureWithModule,  decls, lines)
@@ -415,7 +415,7 @@ Function/S getGlobalProcWindows()
 	return getProcWindows("*","INDEPENDENTMODULE:0")
 End
 
-// Returns a list of all procedures windows in the given independent module 
+// Returns a list of all procedures windows in the given independent module
 Function/S getIMProcWindows(moduleName)
 	string moduleName
 
@@ -430,9 +430,9 @@ Function/S getProcWindows(regexp,options)
 
 	string procList, procListClean = "", procedure
 	variable i, endIdx
-	
+
 	procList = WinList(regexp,";",options)
-	
+
 	for(i=0; i < ItemsInList(procList); i+=1)
 		// remove the ".ipf *" suffix
 		procedure = StringFromList(i,procList)
@@ -441,7 +441,7 @@ Function/S getProcWindows(regexp,options)
 			procListClean = AddListItem(procedure[0,endIdx-1],procListClean)
 		else
 			procListClean = AddListItem(procedure,procListClean)
-		endif	
+		endif
 	endfor
 
 	return SortList(procListClean,";",4)
@@ -452,11 +452,11 @@ End
 Function/S getModuleList()
 
 	string moduleList
-			
+
 	moduleList = IndependentModuleList(";")
 	moduleList = ListMatch(moduleList,"!WM*",";") // skip WM modules
 	string module = GetIndependentModuleName()
-	
+
 	if(!debuggingEnabled && !isProcGlobal(module))
 		moduleList = ListMatch(moduleList,"!" + module,";") // skip current module
 	endif
@@ -484,7 +484,7 @@ Function/Wave getDeclWave()
 		Make/T/N=(128,2) dfr:$declarations/Wave=wv
 		return wv
 	endif
-	
+
 	return wv
 End
 
@@ -497,7 +497,7 @@ Function/Wave getLineWave()
 		Make/I dfr:$declarationLines/Wave=wv
 		return wv
 	endif
-	
+
 	return wv
 End
 
@@ -514,12 +514,12 @@ Function showCode(procedure,[index])
 
 	Wave/T decl  = getDeclWave()
 	Wave/D lines = getLineWave()
-		
+
 	if(!(index >= 0) || index >= DimSize(decl,0) || index >= DimSize(lines,0))
 		Abort "Index out of range"
 	endif
 
-	if( lines[index] < 0 )	
+	if( lines[index] < 0 )
 		string func     = getShortFuncOrMacroName(decl[index][1])
 		DisplayProcedure/W=$procedure func
 	else

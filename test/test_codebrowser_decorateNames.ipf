@@ -29,7 +29,7 @@ End
 static Function emptyList()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),0)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),0)
@@ -38,7 +38,7 @@ End
 static Function checkLine()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetRealVar", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -48,12 +48,12 @@ End
 static Function passingMacro()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "MyMacro()", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
 	string actual = defWave[0][1]
-	string expected = "MyMacro()" 
+	string expected = "MyMacro()"
 	CHECK_EQUAL_STR(actual, expected)
 	CHECK_EQUAL_VAR(lineWave[0],-1)
 End
@@ -61,7 +61,7 @@ End
 static Function retRealVar_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetRealVar", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -71,7 +71,7 @@ End
 static Function retRealVarComp_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetRealVarComp", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -81,7 +81,7 @@ End
 static Function retComplexVar_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetComplexVar", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -91,7 +91,7 @@ End
 static Function retStr_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetStr", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -101,7 +101,7 @@ End
 static Function retNumericWave_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetNumericWave", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -111,7 +111,7 @@ End
 static Function retTextWave_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetTextWave", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -121,7 +121,7 @@ End
 static Function retDF_wo_args()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcRetDF", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -131,7 +131,7 @@ End
 static Function withArgs()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithArgs", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -143,7 +143,7 @@ End
 static Function withComplexArgs()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithComplexArgs", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -155,7 +155,7 @@ End
 static Function withArgsPassByRef()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithArgsPassByRef", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -167,7 +167,7 @@ End
 static Function withFancyWaves()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithFancyWaves", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -179,7 +179,7 @@ End
 static Function withOnlyOptArg()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithOnlyOptArg", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)
@@ -189,7 +189,7 @@ End
 static Function withOptArgs()
 	Wave/T defWave
 	Wave/I lineWave
-	
+
 	CodeBrowserModule#decorateFunctionNames(module, "funcWithOptArgs", procedure, defWave, lineWave)
 	CHECK_EQUAL_VAR(DimSize(defWave,0),1)
 	CHECK_EQUAL_VAR(DimSize(lineWave,0),1)

@@ -8,7 +8,7 @@
 
 static Function IgorStartOrNewHook(igorApplicationNameStr)
 	string igorApplicationNameStr
-	
+
 	setHooksAndUpdate()
 	return 0
 End
@@ -29,7 +29,7 @@ End
 
 Function setHooksAndUpdate()
 	Execute/Q "SetIgorOption IndependentModuleDev=1"
-	
+
 	// prevent multiple hooks of the same function
 	SetIgorHook/K AfterCompiledHook=updatePanel
 

@@ -15,14 +15,14 @@ End
 
 Function isProcGlobal(module)
 	string module
-	
+
 	return cmpstr(module,"ProcGlobal") == 0
 End
 
 // Returns the dimension of the first screen
 Function GetScreenDimensions(rect)
 	STRUCT RECT &rect
-	
+
 	string str   = StringByKey("SCREEN1",IgorInfo(0))
 	variable idx = strsearch(str,"RECT=",0)
 
@@ -31,11 +31,11 @@ Function GetScreenDimensions(rect)
 	endif
 
 	str = str[idx+5,inf]
-	
+
 	if(ItemsInList(str,",") != 4)
 		Abort "Could not find four values separated by ,"
 	endif
-	
+
 	rect.left   = str2num(StringFromList(0,str,","))
 	rect.top    = str2num(StringFromList(1,str,","))
 	rect.right  = str2num(StringFromList(2,str,","))
@@ -45,14 +45,14 @@ End
 // Returns a quoted string, abcd -> "abcd"
 Function/S quoteString(str)
 	string str
-	
+
 	return "\"" + str + "\""
 End
 
 // Outputs a debug message prefixed with the calling function of debugPrint
 Function debugPrint(msg)
 	string msg
-	
+
 	if(debuggingEnabled)
 		printf "%s(...): %s\r", GetRTStackInfo(2), RemoveEnding(msg,"\r")
 	endif
@@ -69,7 +69,7 @@ Function/DF createDFWithAllParents(dataFolder)
 	if(DataFolderExists(dataFolder))
 		return $dataFolder
 	endif
-	
+
 	 // i=1 because we want to skip root, as this exists always
 	for(i=1; i < ItemsInList(dataFolder,":"); i+=1)
 		partialPath += ":"
@@ -78,7 +78,7 @@ Function/DF createDFWithAllParents(dataFolder)
 			NewDataFolder $partialPath
 		endif
 	endfor
-	
+
 	return $dataFolder
 end
 
