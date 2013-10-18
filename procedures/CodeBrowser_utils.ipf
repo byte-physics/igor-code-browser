@@ -13,6 +13,46 @@ Function isEmpty(str)
 	return !(strlen(str) > 0)
 End
 
+// Add to every item in the list a prefix and/or suffix
+Function/S addToItemsInList(list, [sep, suffix, prefix])
+	string list, sep
+	string suffix, prefix
+
+	if(ParamIsDefault(sep))
+		sep = ";"
+	endif
+
+	if(isEmpty(sep))
+		Abort
+	endif
+
+	if(ParamIsDefault(suffix) && ParamIsDefault(prefix))
+		return list
+	endif
+
+	if(ParamIsDefault(suffix))
+		suffix = ""
+	endif
+	if(ParamIsDefault(prefix))
+		prefix = ""
+	endif
+
+	if(strsearch(suffix,sep,0) != -1 || strsearch(prefix,sep,0) != -1)
+		Abort
+	endif
+
+	variable i
+	string resultList="", item
+
+	variable numItems = ItemsInList(list,sep)
+	for(i=0; i < numItems;i+=1)
+		item = prefix + StringFromList(i,list) + suffix
+		resultList = AddListItem(item,resultList,sep,inf)
+	endfor
+
+	return resultList
+End
+
 Function isProcGlobal(module)
 	string module
 
@@ -40,13 +80,6 @@ Function GetScreenDimensions(rect)
 	rect.top    = str2num(StringFromList(1,str,","))
 	rect.right  = str2num(StringFromList(2,str,","))
 	rect.bottom = str2num(StringFromList(3,str,","))
-End
-
-// Returns a quoted string, abcd -> "abcd"
-Function/S quoteString(str)
-	string str
-
-	return "\"" + str + "\""
 End
 
 // Outputs a debug message prefixed with the calling function of debugPrint
@@ -91,5 +124,17 @@ Function/S getShortFuncOrMacroName(decl)
 		return decl[0, idx-1]
 	else
 		return decl
+	endif
+End
+
+// Searches for findStr in str and removes everything including the first match until the end
+Function/S RemoveEverythingAfter(str,findStr)
+	string str, findStr
+
+	variable idx = strsearch(str,findStr,0)
+	if(idx == -1)
+		return str
+	else
+		return str[0,idx-1]
 	endif
 End

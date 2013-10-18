@@ -16,6 +16,8 @@ static StrConstant panel      = "CodeBrowser"
 static StrConstant moduleCtrl	= "popupNamespace"
 static StrConstant procCtrl  	= "popupProcedure"
 static StrConstant listCtrl   = "list1"
+static StrConstant userDataRawList = "rawList"
+static StrConstant userDataNiceList = "niceList"
 
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
@@ -46,11 +48,11 @@ Function createPanel()
 
 	PopupMenu $moduleCtrl,	 win=$panel,pos={30,moduleCtrlTop}, size={popupLength,20}, bodywidth=200
 	PopupMenu $moduleCtrl,	 win=$panel,title="Namespace"
-	PopupMenu $moduleCtrl, win=$panel,proc=$(module + "#popupModules")
+	PopupMenu $moduleCtrl, win=$panel,proc=$(module + "#popupModules"),value=#module + "#generateModuleList()"
 
 	PopupMenu $procCtrl,   win=$panel,pos={30,procCtrlTop}, size={popupLength,20}, bodywidth=200
 	PopupMenu $procCtrl,	 win=$panel,title="Procedure"
-	PopupMenu $procCtrl,   win=$panel,proc=$(module + "#popupProcedures")
+	PopupMenu $procCtrl,   win=$panel,proc=$(module + "#popupProcedures"),value=#module + "#generateProcedureList()"
 
 	ListBox   $listCtrl,   win=$panel,pos={border,topSpaceList}, size={300,800}
 	ListBox   $listCtrl,   win=$panel,proc=$(module + "#ListBoxProc")
@@ -62,6 +64,32 @@ Function createPanel()
 
 	initializePanel()
 	resizePanel()
+End
+
+// Callback for the modules popup
+// Stores the raw list as user data
+Function/S generateModuleList()
+	debugPrint("called")
+
+	string niceList = getModuleList()
+
+	PopupMenu $moduleCtrl, win=$panel, userData($userDataNiceList)=niceList
+
+	return niceList
+End
+
+// Callback for the procedure popup, returns a nicified list
+// Stores both the nicified list and the raw list as user data
+Function/S generateProcedureList()
+	debugPrint("called")
+
+	string module = getCurrentItem(module=1)
+	string procList = getProcList(module)
+	string niceList = nicifyProcedureList(procList)
+
+	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
+
+	return niceList
 End
 
 // Resize the panel controls
@@ -101,16 +129,9 @@ Function updatePanel()
 		return 0
 	endif
 
-	updatePopup(moduleCtrl,getModuleList())
+	debugPrint("panel exists")
 
-	ControlInfo/W=$panel $moduleCtrl
-	if(V_Value == 0)
-		debugPrint("unknown GUI element: " + moduleCtrl)
-		return 0
-	endif
-
-	string module = S_value
-	updatePopup(procCtrl,getProcList(module))
+	ControlUpdate/A/W=$panel
 	updateListBoxHook()
 
 	return 0
@@ -149,22 +170,22 @@ End
 // Returns the currently selected item from the panel defined by the optional arguments.
 // Exactly one optional argument must be given.
 //
-// module: Module from ProcGlobal/Independent Module list
-// procedure: Procedure name as shown in the panel, "myProcedure"
-// procedureWithSuffix: "myProcedure.ipf"
-// procedureWithModule: "myProcedure.ipf [moduleName]", except for the main procedure window which just returns "myProcedure [ProcGlobal]"
-// index: Zero-based index into main listbox
-Function/S getCurrentItem([module, procedure, procedureWithSuffix, procedureWithModule, index])
-	variable module, procedure, procedureWithSuffix, procedureWithModule, index
+// module:              Module from ProcGlobal/Independent Module list
+// procedure:           "myProcedure.ipf [moduleName]"
+// procedureWithModule: "myProcedure.ipf"
+// index:               Zero-based index into main listbox
+Function/S getCurrentItem([module, procedure,procedureWithoutModule, index])
+	variable module, procedureWithoutModule, procedure, index
 
-	module              =  ParamIsDefault(module)              ? 0 : 1
-	procedure           =  ParamIsDefault(procedure)           ? 0 : 1
-	procedureWithSuffix =  ParamIsDefault(procedureWithSuffix) ? 0 : 1
-	procedureWithModule =  ParamIsDefault(procedureWithModule) ? 0 : 1
-	index               =  ParamIsDefault(index)               ? 0 : 1
+	string procName
+
+	module                 =  ParamIsDefault(module)                 ? 0 : 1
+	procedureWithoutModule =  ParamIsDefault(procedureWithoutModule) ? 0 : 1
+	procedure              =  ParamIsDefault(procedure)              ? 0 : 1
+	index                  =  ParamIsDefault(index)                  ? 0 : 1
 
 	// only one optional argument allowed
-	if(module + procedure + procedureWithSuffix + procedureWithModule + index != 1)
+	if(module + procedure + procedureWithoutModule + index != 1)
 		return "_error_"
 	endif
 
@@ -180,62 +201,61 @@ Function/S getCurrentItem([module, procedure, procedureWithSuffix, procedureWith
 		if(V_Value >= 0)
 			return num2str(V_Value)
 		endif
-	elseif(procedure || procedureWithModule || procedureWithSuffix)
+	elseif(procedure || procedureWithoutModule)
 
 		ControlInfo/W=$panel $procCtrl
+		V_Value -= 1 // 1-based index
+		string rawList = GetUserData(panel,procCtrl,userDataRawList)
 
-		if(V_Value <= 0)
+		if(V_Value < 0 || V_Value >= ItemsInList(rawList))
 			return "_error_"
 		endif
 
-		string windowName = S_value
+		procName = StringFromList(V_Value,rawList)
 
-		if(procedureWithModule)
-			string moduleName = getCurrentItem(module=1)
-			// work around FunctionList not accepting Procedure.ipf [ProcGlobal]
-			if(isProcGlobal("ProcGlobal") && cmpstr(windowName,"Procedure") == 0)
-				return windowName + " [" + moduleName + "]"
-			else
-				return windowName + ".ipf [" + moduleName + "]"
-			endif
-		elseif(procedureWithSuffix)
-			return windowName + ".ipf"
-		else
-			return windowName
+		if(procedureWithoutModule)
+			return RemoveEverythingAfter(procName," [")
 		endif
+
+		return procName
 	endif
 
 	return "_error_"
 End
 
-// Updates the list of the given popup menu
+// Updates the the given popup menu
 // Tries to preserve the currently selected item
-Function updatePopup(ctrlName,list)
-	string ctrlName, list
+Function updatePopup(ctrlName)
+	string ctrlName
 
-	string quotedList
+	string itemText = "", list
+	variable index
 
 	ControlInfo/W=$panel $ctrlName
-	variable index    = V_Value - 1
-	string   itemText = ""
-
+	index = V_Value
 	if(!isEmpty(S_Value))
 		itemText = S_Value
 	endif
 
+	ControlUpdate/W=$panel $ctrlName
+
+	list = GetUserData(panel,procCtrl,userDataNiceList)
+
 	if(ItemsInList(list) == 1)
-		quotedList = quoteString(list)
-		PopupMenu $ctrlName win=$panel, disable=2, value=#quotedList
+		PopupMenu $ctrlName win=$panel, disable=2
 	else
-		quotedList = quoteString(list)
-		PopupMenu $ctrlName win=$panel, disable=0, value=#quotedList
+		PopupMenu $ctrlName win=$panel, disable=0
 	endif
 
-	// choose the first element if we can't restore or would restore to the wrong argument
-	if( !(index > 0) || index >= ItemsInList(list) || cmpstr(itemText,StringFromList(index,list)) != 0)
-		PopupMenu $ctrlName win=$panel, mode=1
-	else
-		PopupMenu $ctrlName win=$panel, mode=(index+1)
+	// try to restore the previously selected item if it differs from the current one
+	variable newIndex = WhichListItem(itemText,list) + 1
+
+	if(newIndex != index) // only update if required, as the update triggers the list generating function
+		if( newIndex > 0)
+			PopupMenu $ctrlName win=$panel, mode=newIndex
+		else
+			PopupMenu $ctrlName win=$panel, mode=1
+		endif
 	endif
 End
 
@@ -244,6 +264,7 @@ Function popupModules(pa) : PopupMenuControl
 
 	switch( pa.eventCode )
 		case 2: // mouse up
+			debugprint("mouse up")
 
 			string module = pa.popStr
 
@@ -251,10 +272,10 @@ Function popupModules(pa) : PopupMenuControl
 				break
 			endif
 
-			updatePopup(procCtrl,getProcList(module))
+			updatePopup(procCtrl)
 
 			if(updateListBoxHook() == 0)
-				showCode(getCurrentItem(procedureWithModule=1))
+				showCode(getCurrentItem(procedure=1))
 			endif
 			break
 	endswitch
@@ -267,7 +288,9 @@ Function popupProcedures(pa) : PopupMenuControl
 
 	switch( pa.eventCode )
 		case 2: // mouse up
-			string procedure = getCurrentItem(procedure=1)
+			debugprint("mouse up")
+
+			string procedure = pa.popStr
 
 			if( isEmpty(procedure) )
 				break
@@ -302,7 +325,7 @@ Function listBoxProc(lba) : ListBoxControl
 				return 0
 			endif
 
-			procedure = getCurrentItem(procedureWithModule=1)
+			procedure = getCurrentItem(procedure=1)
 			showCode(procedure, index=row)
 			break
 		case 4: // cell selection
@@ -318,14 +341,8 @@ Function listBoxProc(lba) : ListBoxControl
 				return 0
 			endif
 
-			if(debuggingEnabled)
-				string	str
-				sprintf str, "keycode=%d,char=%s\r", row, num2char(row)
-				debugprint(str)
-			endif
-
 			if(row == openkey)
-				procedure = getCurrentItem(procedureWithModule=1)
+				procedure = getCurrentItem(procedure=1)
 				variable listIndex = str2num(getCurrentItem(index=1))
 				showCode(procedure,index=listIndex)
 			endif

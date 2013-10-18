@@ -395,24 +395,47 @@ Function/S parseAllProcedureWindows()
 
 	string options, funcList, macList, list=""
 	string module = getCurrentItem(module=1)
-	string procedureWithModule = getCurrentItem(procedureWithModule=1)
-	string procedureWithSuffix = getCurrentItem(procedureWithSuffix=1)
+	string procedure = getCurrentItem(procedure=1)
+	string procedureWithoutModule = getCurrentItem(procedureWithoutModule=1)
 
 	// list normal, userdefined, override and static functions
-	options  = "KIND:18,WIN:" + procedureWithModule
+	options  = "KIND:18,WIN:" + procedure
 	funcList = FunctionList("*",";",options)
-	macList  = getDecoratedMacroList(procedureWithSuffix)
+
+	macList  = getDecoratedMacroList(procedureWithoutModule)
 
 	list = SortList(funcList + macList,";",4)
 
 	Wave/T decls = getDeclWave()
 	Wave/D lines = getLineWave()
-	decorateFunctionNames(module, list, procedureWithModule,  decls, lines)
+	decorateFunctionNames(module, list, procedure,  decls, lines)
+End
+
+// Returns a list with the following optional suffixes removed:
+// -Module " [.*]"
+// -Ending ".ipf"
+// -Both ".ipf [.*]"
+Function/S nicifyProcedureList(list)
+	string list
+
+	variable i, idx
+	string item, niceList=""
+
+	for(i=0; i < ItemsInList(list);i+=1)
+		item = StringFromList(i,list)
+		item = RemoveEverythingAfter(item," [")
+		item = RemoveEverythingAfter(item,".ipf")
+		niceList = AddListItem(item,niceList,";",inf)
+	endfor
+
+	return niceList
 End
 
 // Returns a list of all procedures windows in ProcGlobal context
 Function/S getGlobalProcWindows()
-	return getProcWindows("*","INDEPENDENTMODULE:0")
+	string procList = getProcWindows("*","INDEPENDENTMODULE:0")
+
+	return AddToItemsInList(procList, suffix=" [ProcGlobal]")
 End
 
 // Returns a list of all procedures windows in the given independent module
@@ -428,23 +451,8 @@ End
 Function/S getProcWindows(regexp,options)
 	string regexp, options
 
-	string procList, procListClean = "", procedure
-	variable i, endIdx
-
-	procList = WinList(regexp,";",options)
-
-	for(i=0; i < ItemsInList(procList); i+=1)
-		// remove the ".ipf *" suffix
-		procedure = StringFromList(i,procList)
-		endIdx = strsearch(procedure,".ipf",0)
-		if(endIdx > 0)
-			procListClean = AddListItem(procedure[0,endIdx-1],procListClean)
-		else
-			procListClean = AddListItem(procedure,procListClean)
-		endif
-	endfor
-
-	return SortList(procListClean,";",4)
+	string procList = WinList(regexp,";",options)
+	return SortList(procList,";",4)
 End
 
 // Returns a list of independent modules
@@ -527,7 +535,7 @@ Function showCode(procedure,[index])
 	endif
 End
 
-// Returns a list of all procedure files of the given indepenent module/ProcGlobal
+// Returns a list of all procedure files of the given independent module/ProcGlobal
 Function/S getProcList(module)
 	string module
 
