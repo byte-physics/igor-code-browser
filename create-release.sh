@@ -2,7 +2,7 @@
 
 set -e
 
-newVersion=1.0
+newVersion=1.1
 
 filesToWatch="procedures test INSTALL.txt"
 
