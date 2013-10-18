@@ -67,7 +67,7 @@ Function panelHook(s)
 				break
 			endif
 			initializePanel()
-			markAsUnInitialized()
+			markAsInitialized()
 			hookResult = 1
 			break
 		case 2:				// kill
