@@ -174,6 +174,7 @@ Function/S interpretThreadsafeTag(threadsafeTag)
 			break
 		default:
 			debugPrint("Unknown default value")
+			return ""
 			break
 	endswitch
 End
