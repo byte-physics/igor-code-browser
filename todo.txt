@@ -1,2 +1,1 @@
-[ ] use enter key instead of "."
-
+[ ] should also open empty procedure files by default
