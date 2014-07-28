@@ -297,7 +297,7 @@ Function popupProcedures(pa) : PopupMenuControl
 			endif
 
 			if(updateListBoxHook() == 0)
-				showCode(procedure)
+				showCode(getCurrentItem(procedure=1))
 			endif
 			break
 	endswitch
