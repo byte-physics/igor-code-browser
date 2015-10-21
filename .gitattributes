@@ -1,0 +1,4 @@
+releases export-ignore
+.git*    export-ignore
+*.sh     export-ignore
+.ipf     eol=lf
