@@ -9,13 +9,15 @@
 static Constant popupLength   = 240
 static Constant moduleCtrlTop = 10
 static Constant procCtrlTop   = 40
+static Constant SortCtrlTop   = 70
 static Constant border        = 5
-static Constant topSpaceList  = 80
+static Constant topSpaceList  = 90
 
 static StrConstant panel      = "CodeBrowser"
 static StrConstant moduleCtrl	= "popupNamespace"
 static StrConstant procCtrl  	= "popupProcedure"
 static StrConstant listCtrl   = "list1"
+static StrConstant sortCtrl = "checkboxSort"
 static StrConstant userDataRawList = "rawList"
 static StrConstant userDataNiceList = "niceList"
 
@@ -59,6 +61,9 @@ Function createPanel()
 	ListBox   $listCtrl,   win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
 	ListBox   $listCtrl,   win=$panel,listWave=getDeclWave()
 
+	CheckBox $sortCtrl, win=$panel, pos={30,SortCtrlTop},size={40,20},value=prefs.panelCheckboxSort
+	CheckBox $sortCtrl, win=$panel, title="sort"
+	CheckBox $sortCtrl, win=$panel, proc=$(module + "#checkboxSort")
 	SetWindow $panel, hook(mainHook)=$(module + "#panelHook")
 	DoUpdate/W=$panel
 
@@ -118,6 +123,7 @@ Function resizePanel()
 	left = (width - V_Width) / 2.0
 	PopupMenu $moduleCtrl, win=$panel,pos={left,moduleCtrlTop}
 	PopupMenu $procCtrl,   win=$panel,pos={left+8,procCtrlTop}
+	CheckBox  $sortCtrl, win=$panel,pos={left+66,SortCtrlTop}
 End
 
 // Must be called after every change which might affect the panel contents
@@ -304,6 +310,32 @@ Function popupProcedures(pa) : PopupMenuControl
 
 	return 0
 End
+
+Function checkboxSort(cba) : CheckBoxControl
+	STRUCT WMCheckboxAction &cba
+
+	switch( cba.eventCode )
+		case 2: // mouse up
+			updateListBoxHook()
+			break
+		case -1: // control being killed
+			break
+	endswitch
+
+	return 0
+End
+
+// returns 0 if checkbox is deselected or 1 if it is selected.
+Function returnCheckBoxSort()	
+	ControlInfo/W=$panel $sortCtrl
+	if (V_flag == 2)		// Checkbox found?
+		return V_Value
+	else
+		//Fallback: Sorting as default behaviour
+		return 1
+	endif
+End
+
 
 Function listBoxProc(lba) : ListBoxControl
 	STRUCT WMListboxAction &lba

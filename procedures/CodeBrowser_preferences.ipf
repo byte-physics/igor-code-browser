@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 100
+static Constant kPrefsVersion = 101
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -14,7 +14,8 @@ static Constant kPrefsRecordID = 0
 Structure CodeBrowserPrefs
 	uint32	version		// Preferences structure version number. 100 means 1.00.
 	double panelCoords[4]	// left, top, right, bottom
-	uint32 reserved[100]	// Reserved for future use
+	uint32 panelCheckboxSort 	// status of checkbox in createPanel()
+	uint32 reserved[99]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -31,8 +32,10 @@ static Function DefaultPackagePrefsStruct(prefs)
 	prefs.panelCoords[2] = 0.95 * dims.right
 	prefs.panelCoords[3] = 0.90 * dims.bottom
 
+	prefs.panelCheckboxSort = 1
+
 	Variable i
-	for(i=0; i<100; i+=1)
+	for(i=0; i<99; i+=1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -53,6 +56,8 @@ static Function SyncPackagePrefsStruct(prefs)
 	prefs.panelCoords[1] = V_top * scale
 	prefs.panelCoords[2] = V_right * scale
 	prefs.panelCoords[3] = V_bottom * scale
+	
+	prefs.panelCheckboxSort = returnCheckBoxSort()
 End
 
 // InitPackagePrefsStruct(prefs)
