@@ -3,15 +3,19 @@
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 
+#include <Resize Controls>
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant popupLength   = 240
+Constant panelWidth    = 278
+Constant panelHeight   = 170
+Constant panelLeft     = 50
+Constant panelTop      = 50
+static Constant panelTopHeight= 90
+static Constant panelBorder   = 5
 static Constant moduleCtrlTop = 10
 static Constant procCtrlTop   = 40
 static Constant SortCtrlTop   = 70
-static Constant border        = 5
-static Constant topSpaceList  = 90
 
 static StrConstant panel      = "CodeBrowser"
 static StrConstant moduleCtrl	= "popupNamespace"
@@ -29,46 +33,87 @@ End
 
 // Creates the main panel
 Function createPanel()
+	STRUCT CodeBrowserPrefs prefs
+	LoadPackagePrefsFromDisk(prefs)
 
 	DoWindow $panel
 	if(V_flag != 0)
+		DebugPrint("Panel Exists")
 		DoWindow/F $panel
 		return NaN
 	endif
 
+	// define position
+	Variable panelLeft = 0, panelTop = 0
+	NewPanel/N=$panel /K=1/W=(panelLeft,panelTop,panelLeft+panelWidth,panelTop+panelHeight) // left,top,right,bottom
+	String module = GetIndependentModuleName()
+
+	PopupMenu $moduleCtrl, win=$panel,pos={panelBorder,moduleCtrlTop}, size={panelWidth-2*panelBorder,20}, bodywidth=200
+	PopupMenu $moduleCtrl, win=$panel,title="Namespace"
+	PopupMenu $moduleCtrl, win=$panel,proc=$(module + "#popupModules"),value=#module + "#generateModuleList()"
+
+	PopupMenu $moduleCtrl, userdata(ResizeControlsInfo)= A"!!,@c!!#;-!!#B>J,hm&z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu $moduleCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	PopupMenu $moduleCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+
+	PopupMenu $procCtrl, win=$panel,pos={panelBorder,procCtrlTop}, size={panelWidth-2*panelBorder,20}, bodywidth=200
+	PopupMenu $procCtrl, win=$panel,title="Procedure"
+	PopupMenu $procCtrl, win=$panel,proc=$(module + "#popupProcedures"),value=#module + "#generateProcedureList()"
+
+	PopupMenu $procCtrl, userdata(ResizeControlsInfo)= A"!!,B9!!#>.!!#B:J,hm&z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu $procCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	PopupMenu $procCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+
+	DefineGuide/W=$panel UGH0={FT,panelTopHeight}
+	DefineGuide/W=$panel UGH1={FB,panelBorder}
+
+	ListBox $listCtrl, win=$panel,pos={panelBorder,panelTopHeight + panelBorder}, size={panelWidth-2*panelBorder,panelHeight-panelTopHeight-2*panelBorder}
+	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
+	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
+	ListBox $listCtrl, win=$panel,listWave=getDeclWave()
+
+	ListBox $listCtrl, userdata(ResizeControlsInfo)= A"!!,?X!!#@\"!!#B@!!#?Ez!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
+	ListBox $listCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
+	ListBox $listCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S7zzzzzzzzzzzzz!!!"
+
+	CheckBox $sortCtrl, win=$panel, pos={panelBorder+70,SortCtrlTop},size={40,20},value=prefs.panelCheckboxSort
+	CheckBox $sortCtrl, win=$panel, title="sort"
+	CheckBox $sortCtrl, win=$panel, proc=$(module + "#checkboxSort")
+
+	CheckBox $sortCtrl, userdata(ResizeControlsInfo)= A"!!,EP!!#?E!!#=o!!#<(z!!#`-A7TLfzzzzzzzzzzzzzz!!#o2B4uAezz"
+	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
+	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+
+	SetWindow $panel, hook(mainHook)=$(module + "#panelHook")
+
+	SetWindow $panel, userdata(ResizeControlsInfo)= A"!!*'\"z!!#BE!!#A9zzzzzzzzzzzzzzzzzzzzz"
+	SetWindow $panel, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzzzzzzzz"
+	SetWindow $panel, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzz!!!"
+	SetWindow $panel, userdata(ResizeControlsGuides)=  "UGH0;UGH1;"
+	SetWindow $panel, userdata(ResizeControlsInfoUGH0)= A":-hTC3`S[@0KW?-:-)m'A7]4jDg-86E][6':dmEFF(KAR85E,T>#.mm5tj<o4&A^O8Q88W:-(Bh/het@7o`,K756hm<'*TM8OQ!&3]g5.9MeM`8Q88W:-(Bh3r"
+	SetWindow $panel, userdata(ResizeControlsInfoUGH1)= A":-hTC3`S[@0frH.:-)m'A7]4jDg-86E][6':dmEFF(KAR85E,T>#.mm5tj<o4&A^O8Q88W:-(*g0J5%54%E:B6q&gk7RB1,<CoSI1-.Kp78-NR;b9q[:JNr.3r"
+
+	SetWindow $panel, userdata(oneTimeInit)=  "1"
+
+	resizeToPackagePrefs()
+	DoUpdate/W=$panel
+	initializePanel()
+End
+
+Function resizeToPackagePrefs()
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
 
-	variable left   = prefs.panelCoords[0]
-	variable top    = prefs.panelCoords[1]
-	variable right  = prefs.panelCoords[2]
-	variable bottom = prefs.panelCoords[3]
+	Variable prefsLeft   = prefs.panelCoords[0]
+	Variable prefsTop    = prefs.panelCoords[1]
+	Variable prefsRight  = prefs.panelCoords[2]
+	Variable prefsBottom = prefs.panelCoords[3]
 
-	NewPanel/N=$panel /K=1/W=(left,top,right,bottom)
-
-	string module = GetIndependentModuleName()
-
-	PopupMenu $moduleCtrl,	 win=$panel,pos={30,moduleCtrlTop}, size={popupLength,20}, bodywidth=200
-	PopupMenu $moduleCtrl,	 win=$panel,title="Namespace"
-	PopupMenu $moduleCtrl, win=$panel,proc=$(module + "#popupModules"),value=#module + "#generateModuleList()"
-
-	PopupMenu $procCtrl,   win=$panel,pos={30,procCtrlTop}, size={popupLength,20}, bodywidth=200
-	PopupMenu $procCtrl,	 win=$panel,title="Procedure"
-	PopupMenu $procCtrl,   win=$panel,proc=$(module + "#popupProcedures"),value=#module + "#generateProcedureList()"
-
-	ListBox   $listCtrl,   win=$panel,pos={border,topSpaceList}, size={300,800}
-	ListBox   $listCtrl,   win=$panel,proc=$(module + "#ListBoxProc")
-	ListBox   $listCtrl,   win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
-	ListBox   $listCtrl,   win=$panel,listWave=getDeclWave()
-
-	CheckBox $sortCtrl, win=$panel, pos={30,SortCtrlTop},size={40,20},value=prefs.panelCheckboxSort
-	CheckBox $sortCtrl, win=$panel, title="sort"
-	CheckBox $sortCtrl, win=$panel, proc=$(module + "#checkboxSort")
-	SetWindow $panel, hook(mainHook)=$(module + "#panelHook")
-	DoUpdate/W=$panel
-
-	initializePanel()
-	resizePanel()
+	DoWindow $panel
+	if(V_flag == 0)
+		createPanel()
+	endif
+	MoveWindow/W=$panel prefsLeft, prefsTop, prefsRight, prefsBottom
 End
 
 // Callback for the modules popup
@@ -95,35 +140,6 @@ Function/S generateProcedureList()
 	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
 
 	return niceList
-End
-
-// Resize the panel controls
-Function resizePanel()
-
-	DoWindow $panel
-	if(V_flag == 0)
-		return NaN
-	endif
-
-	variable width, height, left, listBoxWidth, listBoxHeight
-	GetWindow $panel, wsizeDC
-	width  = V_right - V_left
-	height = V_bottom - V_top
-
-	listBoxWidth  = width  - 2*border
-	listBoxHeight = height - border - topSpaceList
-
-	if(listBoxHeight < 40)
-		return NaN
-	endif
-
-	ListBox   $listCtrl, win=$panel,size={listBoxWidth,listBoxHeight}
-
-	ControlInfo/W=$panel $moduleCtrl
-	left = (width - V_Width) / 2.0
-	PopupMenu $moduleCtrl, win=$panel,pos={left,moduleCtrlTop}
-	PopupMenu $procCtrl,   win=$panel,pos={left+8,procCtrlTop}
-	CheckBox  $sortCtrl, win=$panel,pos={left+66,SortCtrlTop}
 End
 
 // Must be called after every change which might affect the panel contents

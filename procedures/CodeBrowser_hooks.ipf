@@ -71,15 +71,13 @@ Function panelHook(s)
 			endif
 			initializePanel()
 			markAsInitialized()
-			hookResult = 1
 			break
 		case 2:				// kill
 			preparePanelClose()
 			hookResult = 1
 			break
 		case 6:				// resize
-			resizePanel()
-			hookResult = 1
+			hookResult = ResizeControls#ResizeControlsHook(s)
 			break
 	endswitch
 

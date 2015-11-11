@@ -991,15 +991,13 @@ static Function setCheckSum(procedure)
 	Variable returnValue, timer
 
 	timer = timerStart()
-	procText = ""
-// added for compatibility reasons to tb/parsing. change on merge.
-#if (exists("Codebrowser#getProcedureText") == 6)
+
 	procText = getProcedureText(procedure.module, procedure.name)
-#else
 	procText = ProcedureText("", 0, procedure.fullname)
-#endif
 	returnValue = setGlobalStr("parsingChecksum", Hash(procText, 1))
+
 	setCheckSumTime(timerStop(timer))
+
 	return (returnValue == 1)
 End
 

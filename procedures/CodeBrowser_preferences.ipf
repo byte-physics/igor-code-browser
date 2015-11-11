@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 101
+static Constant kPrefsVersion = 102
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -22,15 +22,19 @@ EndStructure
 //	Sets prefs structure to default values.
 static Function DefaultPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
+	Variable scale
 
 	prefs.version = kPrefsVersion
 
-	STRUCT RECT dims
-	GetScreenDimensions(dims)
-	prefs.panelCoords[0] = dims.left + 0.7 * dims.right
-	prefs.panelCoords[1] = dims.top  + 35
-	prefs.panelCoords[2] = 0.95 * dims.right
-	prefs.panelCoords[3] = 0.90 * dims.bottom
+#if (IgorVersion() >= 7.0)
+	scale = ScreenResolution / PanelResolution(GetPanel())
+#else
+	scale = ScreenResolution / 72
+#endif
+	prefs.panelCoords[0] = panelLeft * scale
+	prefs.panelCoords[1] = panelTop * scale
+	prefs.panelCoords[2] = (panelLeft + panelWidth) * scale
+	prefs.panelCoords[3] = (panelTop + panelHeight) * scale
 
 	prefs.panelCheckboxSort = 1
 
@@ -43,15 +47,17 @@ End
 // Fill package prefs structures to match state of panel.
 static Function SyncPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
-
+	Variable scale
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
 
-	GetWindow $GetPanel() wsize
-	// NewPanel uses device coordinates. We therefore need to scale from
-	// points (returned by GetWindow) to device units for windows created
-	// by NewPanel.
-	Variable scale = ScreenResolution / 72
+	GetWindow $GetPanel() wsize // returns points
+
+#if (IgorVersion() >= 7.0)
+	scale = ScreenResolution / PanelResolution(GetPanel())
+#else
+	scale = ScreenResolution / 72
+#endif
 	prefs.panelCoords[0] = V_left * scale
 	prefs.panelCoords[1] = V_top * scale
 	prefs.panelCoords[2] = V_right * scale
@@ -77,7 +83,7 @@ End
 
 Function LoadPackagePrefsFromDisk(prefs)
 	STRUCT CodeBrowserPrefs &prefs
-
+	Variable scale
 	// This loads preferences from disk if they exist on disk.
 	LoadPackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 
@@ -86,10 +92,28 @@ Function LoadPackagePrefsFromDisk(prefs)
 		FillPackagePrefsStruct(prefs)	// Set based on panel if it exists or set to default values.
 		SavePackagePrefsToDisk(prefs)	// Create initial prefs record.
 	endif
+
+
+#if (IgorVersion() >= 7.0)
+	scale = ScreenResolution / PanelResolution(GetPanel())
+#else
+	scale = ScreenResolution / 72
+#endif
+	prefs.panelCoords[0] /= scale
+	prefs.panelCoords[1] /= scale
+	prefs.panelCoords[2] /= scale
+	prefs.panelCoords[3] /= scale
+
 End
 
 Function SavePackagePrefsToDisk(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 
 	SavePackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
+End
+
+// Used to test SavePackagePreferences /KILL flag added in Igor Pro 6.10B04.
+Function KillPackagePrefs()
+	STRUCT CodeBrowserPrefs prefs
+	SavePackagePreferences /KILL kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 End
