@@ -45,6 +45,9 @@ Function preparePanelClose()
 	SetIgorHook/K AfterCompiledHook=updatePanel
 	debugprint("AfterCompiledHook: " + S_info)
 
+	// reset Waves needed for Storage
+	saveResetStorage()
+
 	DoWindow $GetPanel()
 	if(V_flag == 0)
 		return 0

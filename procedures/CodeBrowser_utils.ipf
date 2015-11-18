@@ -162,3 +162,92 @@ Function/S trimArgument(lstArguments, strListSepString, [strListSepStringOutput]
 
 	return lstArgumentsTrimmed
 End
+
+Function setGlobalVar(globalVar, numValue)
+	Variable numValue
+	String globalVar
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	Variable/G dfr:$globalVar
+	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	if (!NVAR_Exists(myVar))
+		DebugPrint("global Variable " + globalVar + " failed to create")
+		return 0
+	else
+		myVar = numValue
+		return 1
+	endif
+End
+
+// returns the Value of a (positive) numeric global Variable. Returns -1 if Variable does not exist.
+Function getGlobalVar(globalVar)
+	String globalVar
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	if (!NVAR_Exists(myVar))
+		return -1
+	else
+		return myVar
+	endif
+End
+
+// set a global string variable
+Function setGlobalStr(globalVar, strValue)
+	String globalVar, strValue
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	String/G dfr:$globalVar
+	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	if (!SVAR_Exists(myVar))
+		DebugPrint("global String " + globalVar + " failed to create")
+		return 0
+	else
+		myVar = strValue
+		return 1
+	endif
+End
+
+// returns the Value of a global String. Returns NullString on Error.
+Function/S getGlobalStr(globalVar)
+	String globalVar
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	if (!SVAR_Exists(myVar))
+		return ""
+	else
+		return myVar
+	endif
+End
+
+// extended function of WM's startMSTimer
+Function timerStart()
+	Variable timerRefNum
+	timerRefNum = startMSTimer
+
+	if (timerRefNum == -1)
+		DebugPrint("All timers are in use")
+		return -1
+	endif
+
+	return timerRefNum
+End
+
+// extended function of WM's stopMSTimer
+Function timerStop(timerRefNum)
+	Variable timerRefNum
+	Variable microseconds
+
+	if (timerRefNum == -1)
+		DebugPrint("Timer failed. Using 0ms")
+		return 0
+	endif
+
+	microseconds = stopMSTimer(timerRefNum)
+	return microseconds
+End

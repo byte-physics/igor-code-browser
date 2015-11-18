@@ -38,6 +38,13 @@ StrConstant pkgFolder         = "root:Packages:CodeBrowser"
 StrConstant declarations      = "declarations"
 // 1D Wave in each row having the line of the function or -1 for macros
 StrConstant declarationLines  = "lines"
+// database-like global multidimensional waves for storing parsing results to minimize time.
+static StrConstant CsaveStrings 	= "saveStrings"
+static Strconstant CSaveVariables 	= "saveVariables"
+static StrConstant CsaveWaves 		= "saveWaves"
+// Maximum Waves that will be saved in Experiment. first in first out.
+static Constant CsaveMaximum = 1024
+
 Constant    openKey           = 46 // ".", the dot
 Constant    debuggingEnabled  = 0
 
@@ -561,25 +568,180 @@ static Function sortListByName(decls, lines)
 End
 
 // Parses all procedure windows and write into the decl and line waves
-Function/S parseAllProcedureWindows()
-	string module = getCurrentItem(module=1)
-	string procedure = getCurrentItem(procedure=1)
-	string procedureWithoutModule = getCurrentItem(procedureWithoutModule=1)
-
-	Wave/T decls = getDeclWave()
-	Wave/D lines = getLineWave()
-
-	resetLists(decls, lines)
-	addDecoratedFunctions(module, procedure,  decls, lines)
-	addDecoratedConstants(module, procedureWithoutModule,  decls, lines)
-	addDecoratedMacros(module, procedureWithoutModule,  decls, lines)
-	addDecoratedStructure(module, procedureWithoutModule,  decls, lines)
-
-	if(returnCheckBoxSort())
-		sortListByName(decls, lines)
-	else
-		sortListByLineNumber(decls, lines)
+Function/S parseProcedure(procedure, [checksumIsCalculated])
+	STRUCT procedure &procedure
+	Variable checksumIsCalculated
+	if (ParamIsDefault(checksumIsCalculated))
+		checksumIsCalculated = 0
 	endif
+	DebugPrint("Checksum recalc:" + num2str(checksumIsCalculated))
+
+	// start timer
+	Variable timer = timerStart()
+
+	// load global lists
+	Wave/T decls = getDeclWave()
+	Wave/I lines = getLineWave()
+
+	// scan and add elements to lists
+	resetLists(decls, lines)
+	addDecoratedFunctions(procedure.module, procedure.fullName, decls, lines)
+	addDecoratedConstants(procedure.module, procedure.name, decls, lines)
+	addDecoratedMacros(procedure.module, procedure.name, decls, lines)
+	addDecoratedStructure(procedure.module, procedure.name, decls, lines)
+
+	// stop timer
+	setParsingTime(timerStop(timer))
+End
+
+// Identifier = module#procedure
+static Function saveResults(procedure)
+	STRUCT procedure &procedure
+
+	Wave/T declWave = getDeclWave()
+	Wave/I lineWave = getLineWave()
+
+	Wave/WAVE	SaveWavesWave		= getSaveWaves()
+	Wave/T 	SaveStringsWave		= getSaveStrings()
+	Wave		SaveVariablesWave	= getSaveVariables()
+
+	Variable endOfWave = Dimsize(SaveWavesWave,0)
+
+	debugPrint("saving Results for " + procedure.id)
+
+	// prepare Waves for data storage.
+	if (procedure.row < 0)
+		// maximum data storage was reached, push elements to free last item.
+		savePush()
+		procedure.row = endOfWave - 1
+	elseif (procedure.row == endOfWave)
+		// redimension waves to fit new elements
+		Redimension/N=((endOfWave+1), -1) SaveStringsWave
+		Redimension/N=((endOfWave+1), -1) SaveWavesWave
+		Redimension/N=((endOfWave+1), -1) SaveVariablesWave
+	endif
+
+	// save Results. Waves as References to free waves and the Id-Identifier
+	Duplicate/FREE declWave myFreeDeclWave
+	Duplicate/FREE lineWave myFreeLineWave
+	SaveStringsWave[procedure.row][0] 	= procedure.id
+	SaveStringsWave[procedure.row][1] 	= getChecksum()
+	SaveWavesWave[procedure.row][0] = myFreeDeclWave
+	SaveWavesWave[procedure.row][1] = myFreeLineWave
+	SaveVariablesWave[procedure.row][0] = 1 // mark as valid
+	SaveVariablesWave[procedure.row][1] = getParsingTime() // time in micro seconds
+	SaveVariablesWave[procedure.row][2] = getCheckSumTime() // time in micro seconds
+End
+
+static Function saveLoad(procedure)
+	STRUCT procedure &procedure
+
+	Variable numResults
+
+	Wave/T declWave = getDeclWave()
+	Wave/I lineWave = getLineWave()
+
+	Wave/WAVE	SaveWavesWave		= getSaveWaves()
+	Wave/T 	SaveStringsWave		= getSaveStrings()
+	Wave		SaveVariablesWave	= getSaveVariables()
+
+	if((procedure.row < 0) || (procedure.row == Dimsize(SaveStringsWave,0)) || (Dimsize(SaveStringsWave,0) == 0))
+		// if maximum storage capacity was reached (procedure.row == -1) or Element not found (procedure.row == endofWave) there is nothing to load.
+		debugPrint("save state not found")
+		return -1
+	elseif(SaveVariablesWave[procedure.row][0] == 0)
+		// procedure marked as non valid by AfterRecompileHook
+		// checksum needs to be compared.
+
+		// getting checksum
+		if (setChecksum(procedure) != 1)
+			debugPrint("error creating variable")
+			return -1
+		endif
+		// comparing checksum
+		if (cmpstr(SaveStringsWave[procedure.row][1],getChecksum()) != 0)
+			// checksum changed. return -2 to indicate that calculation was already done by setChecksum.
+			debugPrint("Checksum missmatch: Procedure has to be reloaded.")
+			return -2
+		else
+			//mark as valid
+			debugPrint("Checksum match: Procedure marked valid.")
+			SaveVariablesWave[procedure.row][0] = 1
+		endif
+	endif
+
+	// load results from free waves
+	numResults = Dimsize(SaveWavesWave[procedure.row][0], 0)
+	Redimension/N=(numResults, -1) declWave, lineWave
+	if (numResults > 0)
+		WAVE/T load0 = SaveWavesWave[procedure.row][0]
+		WAVE/I load1 = SaveWavesWave[procedure.row][1]
+		declWave[][0] = load0[p][0]
+		declWave[][1] = load0[p][1]
+		lineWave[] = load1[p]
+		debugPrint("save state loaded successfully")
+		return 1
+	else
+		debugPrint("no elements in save state")
+		return 0
+	endif
+End
+
+//	Identifier = module#procedure
+static Function getSaveRow(Identifier)
+	String Identifier
+
+	Wave/T SaveStrings = getSaveStrings()
+	Variable found, endOfWave
+
+	FindValue/TEXT=Identifier/TXOP=4/Z SaveStrings
+	if (V_value == -1)
+		// element not found
+		return Dimsize(SaveStrings,0)
+	else
+		// element found at position V_value
+
+		// check for inconsistency.
+		if (V_value > CsaveMaximum )
+			DebugPrint("Storage capacity exceeded")
+			// should only happen if (CsaveMaximum) was touched on runtime.
+			// Redimension/Deletion of Wave could be possible.
+			return (CsaveMaximum - 1)
+		endif
+
+		return V_value
+	endif
+End
+
+// drop first item at position 0. push all elements upward by 1 element. Free last Position.
+static Function savePush()
+	Wave/T SaveStrings = getSaveStrings()
+	Wave/WAVE SaveWavesWave = getSaveWaves()
+	Wave SaveVariables = getSaveVariables()
+	Variable i, endOfWave = Dimsize(SaveStrings,0)
+
+	// moving items.
+	MatrixOp/O SaveVariables = rotateRows(SaveVariables, (endofWave-1))
+	// MatrixOP is strictly numeric (but fast)
+	for (i=0; i<endofWave;i+=1)
+		SaveWavesWave[i][]	= SaveWavesWave[(i+1)][q]
+		SaveStrings[i][] 	= SaveStrings[(i+1)][q]
+	endfor
+End
+
+Function saveReParse()
+	Wave savedVariables = getSaveVariables()
+	savedVariables[][0] = 0
+End
+
+Function saveResetStorage()
+	Wave savedVariablesWave = getSaveVariables()
+	Wave/T SavedStringsWave = getSaveStrings()
+	Wave/WAVE SavedWavesWave = getSaveWaves()
+	// if waves are in use. Mark for ReParse
+	saveReParse()
+	Killwaves/Z savedVariablesWave, SavedStringsWave, SavedWavesWave
+
 End
 
 // Returns a list with the following optional suffixes removed:
@@ -614,6 +776,69 @@ Function/S getProcedureText(module, procedureWithoutModule)
 	endif
 End
 
+// Returns 1 if the procedure file has content which we can show, 0 otherwise
+Function updateListBoxHook()
+	STRUCT procedure procedure
+	Variable returnState
+
+	// load global lists (for sort)
+	Wave/T decls = getDeclWave()
+	Wave/I lines = getLineWave()
+
+	// get procedure information
+	procedure.name 		= getCurrentItem(procedureWithoutModule=1)
+	procedure.module 	= getCurrentItem(module=1)
+	procedure.fullName = getCurrentItem(procedure=1) // remove this if maclist is removed
+	procedure.id 	= procedure.module + "#" + procedure.name
+	procedure.row 	= getSaveRow(procedure.id)
+
+	// load procedure
+	returnState = saveLoad(procedure)
+	if (returnState<0)
+		debugPrint("parsing Procedure")
+		parseProcedure(procedure)
+		// return state -2 means checksum already calculated and stored in global variable.
+		if (!(returnState == -2))
+			setCheckSum(procedure)
+		endif
+		// save information in "database"
+		saveResults(procedure)
+	endif
+
+	// check if sort is necessary
+	if(returnCheckBoxSort())
+		sortListByName(decls, lines)
+	else
+		sortListByLineNumber(decls, lines)
+	endif
+End
+
+// Shows the line/function for the function/macro with the given index into decl
+// With no index just the procedure file is shown
+Function showCode(procedure,[index])
+	string procedure
+	variable index
+
+	if(ParamIsDefault(index))
+		DisplayProcedure/W=$procedure
+		return NaN
+	endif
+
+	Wave/T decl  = getDeclWave()
+	Wave/I lines = getLineWave()
+
+	if(!(index >= 0) || index >= DimSize(decl,0) || index >= DimSize(lines,0))
+		Abort "Index out of range"
+	endif
+
+	if( lines[index] < 0 )
+		string func     = getShortFuncOrMacroName(decl[index][1])
+		DisplayProcedure/W=$procedure func
+	else
+		DisplayProcedure/W=$procedure/L=(lines[index])
+	endif
+End
+
 // Returns a list of all procedures windows in ProcGlobal context
 Function/S getGlobalProcWindows()
 	string procList = getProcWindows("*","INDEPENDENTMODULE:0")
@@ -641,12 +866,11 @@ End
 // Returns a list of independent modules
 // Includes ProcGlobal but skips all WM modules and the current module in release mode
 Function/S getModuleList()
-
-	string moduleList
+	String moduleList
 
 	moduleList = IndependentModuleList(";")
 	moduleList = ListMatch(moduleList,"!WM*",";") // skip WM modules
-	string module = GetIndependentModuleName()
+	String module = GetIndependentModuleName()
 
 	if(!debuggingEnabled && !isProcGlobal(module))
 		moduleList = ListMatch(moduleList,"!" + module,";") // skip current module
@@ -656,70 +880,84 @@ Function/S getModuleList()
 	return moduleList
 End
 
-// Returns 1 if the procedure file has content which we can show, 0 otherwise
-Function updateListBoxHook()
-
-	debugPrint("Updating listbox")
-	parseAllProcedureWindows()
-
-	Wave/T decls = getDeclWave()
-	return (DimSize(decls,0) > 0)
-End
-
-// Returns a reference to the declaration wave, created if needed
+// Returns declarations: after parsing the object names and variables are stored in this wave.
+// Return refrence to (text) Wave/T
 Function/Wave getDeclWave()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/T/SDFR=dfr wv = $declarations
 
-	dfref dfr = createDFWithAllParents(pkgFolder)
-	Wave/Z/T/SDFR=dfr wv = $declarations
 	if(!WaveExists(wv))
 		Make/T/N=(128,2) dfr:$declarations/Wave=wv
-		return wv
 	endif
 
 	return wv
 End
 
-// Returns a reference to the line wave, created if needed
+// Returns linenumbers: each parsing result of decl has a corresponding line number.
+// Return refrence to (integer) Wave/I
 Function/Wave getLineWave()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/I/SDFR=dfr wv = $declarationLines
 
-	dfref dfr = createDFWithAllParents(pkgFolder)
-	Wave/Z/I/SDFR=dfr wv = $declarationLines
 	if(!WaveExists(wv))
 		Make/I dfr:$declarationLines/Wave=wv
-		return wv
 	endif
 
 	return wv
 End
 
-// Shows the line for the Element with the given index into decl
-// With no index just the procedure file is shown
-Function showCode(procedure,[index])
-	string procedure
-	variable index
+// 2D-Wave with Strings
+// Return refrence to (string) Wave/T
+static Function/Wave getSaveStrings()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/T/SDFR=dfr wv = $CsaveStrings
 
-	if(ParamIsDefault(index))
-		DisplayProcedure/W=$procedure
-		return NaN
+	if(!WaveExists(wv))
+		// Textwave:
+		// Column 1: Id (Identification String)
+		// Column 2: CheckSum
+		Make/T/N=(0,2) dfr:$CsaveStrings/Wave=wv
 	endif
 
-	Wave/T decl  = getDeclWave()
-	Wave/D lines = getLineWave()
+	return wv
+End
 
-	if(!(index >= 0) || index >= DimSize(decl,0) || index >= DimSize(lines,0))
-		Abort "Index out of range"
+// 2D-Wave with references to Declaration- and LineNumber-Waves as free waves.
+// Return refrence to (wave) Wave/WAVE
+static Function/Wave getSaveWaves()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/WAVE/SDFR=dfr wv = $CsaveWaves
+
+	if(!WaveExists(wv))
+		Make/WAVE/N=(0,2) dfr:$CsaveWaves/Wave=wv // wave of wave references
+		// Wave with Free Waves:
+		// Column 1: decl (a (text) Wave/T with the results of parsing the procedure file)
+		// Column 1: line (a (integer) Wave/I with the corresponding line numbers within the procedure file)
 	endif
 
-	if( lines[index] < 0 )
-		debugprint("line number missing")
-	else
-		DisplayProcedure/W=$procedure/L=(lines[index])
+	return wv
+End
+
+// 2D-Wave where Numbers can be stored.
+// Return refrence to (numeric) Wave
+static Function/Wave getSaveVariables()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/SDFR=dfr wv = $CsaveVariables
+
+	if(!WaveExists(wv))
+		// Numeric Wave:
+		// Column 1: valid (0: no, 1: yes) used to mark waves for parsing after "compile" was done.
+		// Column 2: time for parsing (time consumption of compilation in us)
+		// Column 3: time for checksum
+		Make/N=(0,3) dfr:$CsaveVariables/Wave=wv
 	endif
+
+	return wv
 End
 
 // Returns a list of all procedure files of the given independent module/ProcGlobal
 Function/S getProcList(module)
-	string module
+	String module
 
 	if( isProcGlobal(module) )
 		return getGlobalProcWindows()
@@ -727,3 +965,52 @@ Function/S getProcList(module)
   		return getIMProcWindows(module)
 	endif
 End
+
+static Function getParsingTime()
+	return getGlobalVar("parsingTime")
+End
+
+static Function setParsingTime(numTime)
+	Variable numTime
+	return setGlobalVar("parsingTime", numTime)
+End
+
+static Function getCheckSumTime()
+	return getGlobalVar("checksumTime")
+End
+
+static Function setCheckSumTime(numTime)
+	Variable numTime
+	return setGlobalVar("checksumTime", numTime)
+End
+
+static Function setCheckSum(procedure)
+	STRUCT procedure &procedure
+
+	String procText, checksum
+	Variable returnValue, timer
+
+	timer = timerStart()
+	procText = ""
+// added for compatibility reasons to tb/parsing. change on merge.
+#if (exists("Codebrowser#getProcedureText") == 6)
+	procText = getProcedureText(procedure.module, procedure.name)
+#else
+	procText = ProcedureText("", 0, procedure.fullname)
+#endif
+	returnValue = setGlobalStr("parsingChecksum", Hash(procText, 1))
+	setCheckSumTime(timerStop(timer))
+	return (returnValue == 1)
+End
+
+static Function/S getCheckSum()
+	return getGlobalStr("parsingChecksum")
+End
+
+static Structure procedure
+	String id
+	Variable row
+	String name
+	String module
+	String fullName
+Endstructure
