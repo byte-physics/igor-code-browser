@@ -405,7 +405,11 @@ Function/S parseAllProcedureWindows()
 
 	macList  = getDecoratedMacroList(procedureWithoutModule)
 
-	list = SortList(funcList + macList,";",4)
+	if (returnCheckBoxSort())
+		list = SortList(funcList + macList,";",4) //option 4: Case-insensitive sort
+	else
+		list = funcList + macList
+	endif
 
 	Wave/T decls = getDeclWave()
 	Wave/D lines = getLineWave()
