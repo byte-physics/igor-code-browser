@@ -12,18 +12,23 @@ Menu "CodeBrowser"
 End
 
 // Markers for the different listbox elements
-StrConstant functionMarker = "\\W529"
-StrConstant macroMarker    = "\\W519"
+StrConstant strConstantMarker	= "\\W539"
+StrConstant constantMarker		= "\\W534"
+StrConstant functionMarker		= "\\W529"
+StrConstant macroMarker			= "\\W519"
+StrConstant windowMarker			= "\\W520"
+StrConstant procMarker			= "\\W521"
+StrConstant structureMarker		= "\\W522"
 
 // the idea here: static functions have less intense colors
-StrConstant plainColor             = "0,0,0"             // black
-StrConstant staticFunctionColor    = "47872,47872,47872" // grey
+StrConstant plainColor     = "0,0,0"             // black
+StrConstant staticColor    = "47872,47872,47872" // grey
 
-StrConstant tsFunctionColor        = "0,0,65280"         // blue
-StrConstant tsStaticFunctionColor  = "32768,40704,65280" // light blue
+StrConstant tsColor        = "0,0,65280"         // blue
+StrConstant tsStaticColor  = "32768,40704,65280" // light blue
 
-StrConstant overrideFunctionColor  = "65280,0,0"         // red
-StrConstant overrideTSFunctionColor= "26368,0,52224"     // purple
+StrConstant overrideColor  = "65280,0,0"         // red
+StrConstant overrideTSColor= "26368,0,52224"     // purple
 
 StrConstant pkgFolder         = "root:Packages:CodeBrowser"
 // 2D Wave
@@ -36,34 +41,10 @@ StrConstant declarationLines  = "lines"
 Constant    openKey           = 46 // ".", the dot
 Constant    debuggingEnabled  = 0
 
-// List of all available subtypes
+// List of available macro subtypes
 StrConstant subTypeList       = "Graph;GraphStyle;GraphMarquee;Table;TableStyle;Layout;LayoutStyle;LayoutMarquee;ListBoxControl;Panel;ButtonControl;CheckBoxControl;PopupMenuControl;SetVariableControl"
-
-// Helper functions as StrConstant/Constant variables are not accessible outside the IM
-Function/S getPlainColor()
-	return plainColor
-End
-
-Function/S getStaticFunctionColor()
-	return staticFunctionColor
-End
-
-Function/S getTsStaticFunctionColor()
-	return tsStaticFunctionColor
-End
-
-Function/S getTsFunctionColor()
-	return tsFunctionColor
-End
-
-Function/S getOverrideFunctionColor()
-	return overrideFunctionColor
-End
-
-Function/S getOverrideTsFunctionColor()
-	return overrideTsFunctionColor
-End
-
+// List of igor7 structure elements.
+static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
 // Loosely based on the WM procedure from the documentation
 // Returns a human readable string for the given parameter/return type.
 // See the documentation for FunctionInfo for the exact values.
@@ -237,27 +218,45 @@ End
 
 // Creates a colored marker based on the function type
 Function/S createMarkerForType(type)
-    string type
+	string type
 
-	if(cmpstr(type,"macro") == 0) // plain macro (they are always plain)
-		return getColorDef(plainColor) + macroMarker
-	elseif(cmpstr(type,"function") == 0) // plain function
-		return getColorDef(plainColor) + functionMarker
+	string marker
+	if(strsearch(type, "function", 0) != -1)
+		marker = functionMarker
+	elseif(strsearch(type, "macro", 0) != -1)
+		marker = macroMarker
+	elseif(strsearch(type, "window", 0) != -1)
+		marker = windowMarker
+	elseif(strsearch(type, "proc", 0) != -1)
+		marker = procMarker
+	elseif(strsearch(type, "strconstant", 0) != -1)
+		marker = strConstantMarker
+	elseif(strsearch(type, "constant", 0) != -1)
+		marker = constantMarker
+	elseif(strsearch(type, "structure", 0) != -1)
+		marker = structureMarker
+	endif
+
+	// plain definitions
+	if(cmpstr(type,"function") == 0 || cmpstr(type,"macro") == 0 || cmpstr(type,"window") == 0 || cmpstr(type,"proc") == 0 || cmpstr(type,"constant") == 0 || cmpstr(type,"strconstant") == 0 || cmpstr(type,"structure") == 0)
+		return getColorDef(plainColor) + marker
 	endif
 
 	if(strsearch(type,"threadsafe",0) != -1)
 		if(strsearch(type,"static",0) != -1) // threadsafe + static
-			return getColorDef(tsStaticFunctionColor) + functionMarker
+			return getColorDef(tsStaticColor) + marker
 		elseif(strsearch(type,"override",0) != -1) // threadsafe + override
-			return getColorDef(overrideTSFunctionColor) + functionMarker
+			return getColorDef(overrideTSColor) + marker
 		else
-			return getColorDef(tsFunctionColor) + functionMarker // plain threadsafe
+			return getColorDef(tsColor) + marker // plain threadsafe
 		endif
 	elseif(strsearch(type,"static",0) != -1)
-		return getColorDef(staticFunctionColor) + functionMarker // plain static
+		return getColorDef(staticColor) + marker // plain static
 	elseif(strsearch(type,"override",0) != -1)
-		return getColorDef(overrideFunctionColor) + functionMarker // plain override
+		return getColorDef(overrideColor) + marker // plain override
 	endif
+
+	Abort "Unknown type"
 End
 
 // Pretty printing of function/macro with additional info
@@ -278,38 +277,37 @@ Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
 	return decl
 End
 
-// Adds all kind of information to the each functionin the list, just copies everything else assuming it is a macro
-Function decorateFunctionNames(module, funcOrMacroList, procedure, declWave, lineWave)
-	string funcOrMacroList, procedure, module
+// Adds all kind of information to a list of function in current procedure
+Function addDecoratedFunctions(module, procedure, declWave, lineWave)
+	string module, procedure
 	Wave/T declWave
 	Wave/D lineWave
 
-	variable numItems = ItemsInList(funcOrMacroList)
-	Redimension/N=(numItems,-1) declWave, lineWave
-
-	string funcOrMacro, funcDec, fi
+	String options, funcList
+	string func, funcDec, fi
 	string threadsafeTag, specialTag, params, subtypeTag, returnType
-	variable i
+	variable idx, numMatches, numEntries
 
-	for(i = 0; i < numItems; i+=1)
-		funcOrMacro = StringFromList(i, funcOrMacroList)
-		fi = FunctionInfo(module + "#" + funcOrMacro, procedure)
-		if(!isEmpty(fi))
-			returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi),0)
-			threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
-			specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
-			subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
-			params        = interpretParameters(fi)
-
-			declWave[i][0] = createMarkerForType("function" + specialTag + threadsafeTag)
-			declWave[i][1] = formatDecl(funcOrMacro, params, subtypeTag, returnType=returnType)
-			lineWave[i]    = NumberByKey("PROCLINE", fi)
-		else // macro
-			declWave[i][0] = createMarkerForType("macro")
-			declWave[i][1] = funcOrMacro
-			lineWave[i]    = -1
+	// list normal, userdefined, override and static functions
+	options  = "KIND:18,WIN:" + procedure
+	funcList = FunctionList("*",";",options)
+	numMatches = ItemsInList(funcList)
+	numEntries = DimSize(declWave, 0)
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
+		func = StringFromList(idx, funcList)
+		fi = FunctionInfo(module + "#" + func, procedure)
+		if(isEmpty(fi))
+			debugPrint("macro or other error for " + module + "#" + func)
 		endif
-
+		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi),0)
+		threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
+		specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
+		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
+		params        = interpretParameters(fi)
+		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
+		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType=returnType)
+		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 	endfor
 
 	if(debuggingEnabled)
@@ -319,101 +317,269 @@ Function decorateFunctionNames(module, funcOrMacroList, procedure, declWave, lin
 	endif
 End
 
-// Returns a human readable visualization of the number of parameters of a macro
-// As we can't get the parameter types we just return ", " for one parameter, ", , " for two and so on
-Function/S getMacroParams(mac,options)
-	string mac, options
+// Adds Constants/StrConstants by searching for them in the Procedure with a Regular Expression
+Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWave)
+	String module, procedureWithoutModule
+	WAVE/T declWave
+	WAVE/D lineWave
 
-	string paramList, optionsWithParams
-	variable k
+	Variable numLines, i, idx, numEntries, numMatches
+	String procText, re, def, name
 
-	string paramString=""
-	for(k=0; k < 11;k+=1)
-		sprintf optionsWithParams, "NPARAMS:%d,%s" k, options
-		paramList = MacroList(mac,";",optionsWithParams)
+	procText = getProcedureText(module, procedureWithoutModule)
+	numLines = ItemsInList(procText, "\r")
+	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 
-		if(!isEmpty(paramList))
-			return paramString
-		endif
+	re = "^(?i)[[:space:]]*((?:override)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+(.*)=.*"
+	Grep/Q/INDX/E=re text
 
-		paramString +=", "
+	if(!V_Value) // no matches
+		KillWaves/Z W_Index
+		return 0
+	endif
+
+	Wave W_Index
+	numMatches = DimSize(W_Index, 0)
+	numEntries = DimSize(declWave, 0)
+
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+
+	idx = numEntries
+	for(i = 0; i < numMatches; i += 1)
+		SplitString/E=re text[W_Index[i]], def, name
+
+		declWave[idx][0] = createMarkerForType(LowerStr(def))
+		declWave[idx][1] = name
+		lineWave[idx]    = W_Index[i]
+		idx += 1
 	endfor
 
-	return ""
+	KillWaves/Z W_Index
 End
 
-// Returns a decorated list of all macros in the given procedure
-// Note: Procedure must *not* include the independent module specification a la " [module]"
-Function/S getDecoratedMacroList(procedure)
-	string procedure
+Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
+	String module, procedureWithoutModule
+	WAVE/T declWave
+	WAVE/D lineWave
 
-	variable i, j, k, l
-	string options, optionsAllSubtypes, maclist, allSubTypesList = "", decoratedList="", paramString=""
-	string mac, subType
+	Variable numLines, i, idx, numEntries, numMatches
+	String procText, re, def, name, arguments, type
 
-	// as we can't search for no subtypes we have to gradually remove each subtype list from the all list
-	// and in the end we will have a list of all macros without subtype
-	sprintf optionsAllSubtypes, "KIND:7,WIN:%s", procedure
-	allSubTypesList = MacroList("*",";",optionsAllSubtypes)
+	procText = getProcedureText(module, procedureWithoutModule)
+	numLines = ItemsInList(procText, "\r")
 
-	if( isEmpty(allSubTypesList) )
+	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
+	// regexp: match case insensitive (?i) spaces don't matter. search for window or macro or proc. Macro Name is the the next non-space character followed by brackets () where the arguments are. At the end there might be a colon, specifying the type of macro and a comment beginning with /
+	// macro should have no arguments. Handled for backwards compatibility.
+	// help for regex on https://regex101.com/
+	re = "^(?i)[[:space:]]*(window|macro|proc)[[:space:]]+([^[:space:]]+)[[:space:]]*\((.*)\)[[:space:]]*[:]?[[:space:]]*([^[:space:]\/]*).*"
+	Grep/Q/INDX/E=re text
+
+	if(!V_Value) // no matches
+		KillWaves/Z W_Index
+		return 0
+	endif
+
+	Wave W_Index
+	numMatches = DimSize(W_Index, 0)
+	numEntries = DimSize(declWave, 0)
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+
+	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
+		SplitString/E=re text[W_Index[(idx - numEntries)]], def, name, arguments, type
+		// def containts window/macro/proc
+		// type contains Panel/Layout for subclasses of window macros
+		declWave[idx][0] = createMarkerForType(LowerStr(def))
+		declWave[idx][1] = name + "(" +  trimArgument(arguments, ",", strListSepStringOutput = ", ") + ")" + " : " + type
+		lineWave[idx]    = W_Index[(idx - numEntries)]
+	endfor
+
+	KillWaves/Z W_Index
+End
+
+Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWave, [parseVariables])
+	String module, procedureWithoutModule
+	WAVE/T declWave
+	WAVE/D lineWave
+	Variable parseVariables
+	if (paramIsDefault(parseVariables) | parseVariables != 1)
+		parseVariables = 1 // added for debugging
+	endif
+
+	variable numLines, i, idx, numEntries, numMatches
+	string procText, reStart, reEnd, name, StaticKeyword
+
+	procText = getProcedureText(module, procedureWithoutModule)
+	numLines = ItemsInList(procText, "\r")
+	if (numLines == 0)
+		debugPrint("no Content in Procedure " + procedureWithoutModule)
+	endif
+	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
+
+	// regexp: match case insensitive (?i) leading spaces don't matter. optional static statement. search for structure name which contains no spaces. followed by an optional space and nearly anything like inline comments
+	// help for regex on https://regex101.com/
+	reStart = "^(?i)[[:space:]]*((?:static[[:space:]])?)[[:space:]]*structure[[:space:]]+([^[:space:]\/]+)[[:space:]\/]?.*"
+	Grep/Q/INDX/E=reStart text
+	Wave W_Index
+	Duplicate/FREE W_Index wavStructureStart
+	KillWaves/Z W_Index
+	WaveClear W_Index
+	if(!V_Value) // no matches
+		return 0
+	endif
+	numMatches = DimSize(wavStructureStart, 0)
+
+	if(parseVariables)
+		// regexp: match case insensitive endstructure followed by (space or /) and anything else or just a lineend
+		// does not match endstructure23 but endstructure//
+		reEnd = "^(?i)[[:space:]]*(?:endstructure(?:[[:space:]]|\/).*)|endstructure$"
+		Grep/Q/INDX/E=reEnd text
+		Wave W_Index
+		Duplicate/FREE W_Index wavStructureEnd
+		KillWaves/Z W_Index
+		WaveClear W_Index
+		if (numMatches != DimSize(wavStructureEnd, 0))
+			numMatches = 0
+			return 0
+		endif
+	endif
+
+	numEntries = DimSize(declWave, 0)
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+
+	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
+		SplitString/E=reStart text[wavStructureStart[(idx - numEntries)]], StaticKeyword, name
+		declWave[idx][0] = createMarkerForType(LowerStr(StaticKeyword) + "structure") // no " " between static and structure needed
+		declWave[idx][1] = name
+		if (parseVariables)
+			Duplicate/FREE/R=[(wavStructureStart[(idx - numEntries)]),(wavStructureEnd[(idx - numEntries)])] text, temp
+			declWave[idx][1] += getStructureElements(temp)
+			WaveClear temp
+
+		endif
+		lineWave[idx]    = wavStructureStart[(idx - numEntries)]
+	endfor
+
+End
+
+// input wave (wavStructure) contains text of Structure lineseparated.
+// wavStructure begins with "Structure" definition in first line and ends with "EndStructure" in last line.
+Function/S getStructureElements(wavStructure)
+	WAVE/T wavStructure
+	String regExp = "", strType
+	String lstVariables, lstTypes, lstNames
+	Variable numElements, numMatches, numVariables, i, j
+
+	// check for minimum structure definition structure/endstructure
+	numElements = Dimsize(wavStructure,0)
+	if(numElements <= 2)
+		DebugPrint("Structure has no Elements")
 		return ""
 	endif
 
-	for(i=0; i < ItemsInList(subTypeList);i+=1)
-		subType = StringFromList(i,subTypeList)
-		sprintf options, "SUBTYPE:%s,%s", subType, optionsAllSubtypes
-		maclist = MacroList("*",";",options)
+	// parse code for returning wavLineNumber and wavContent
+	Duplicate/T/FREE/R=[1,(numElements-1)] wavStructure wavContent
+	regExp = "^(?i)[[:space:]]*(" + cstrTypes + ")[[:space:]]+(?:\/[a-z]+[[:space:]]*)*([^\/]*)(?:[\/].*)?"
+	Grep/Q/INDX/E=regExp wavContent
+	Wave W_Index
+	if(!V_Value) // no matches
+		DebugPrint("No Elements found")
+		return "()"
+	endif
+	Duplicate/FREE W_Index wavLineNumber
+	KillWaves/Z W_Index
 
-		if( isEmpty(maclist) )
-			continue
-		endif
-
-		// remove all macros with a subtype from the allSubTypesList
-		allSubTypesList = RemoveFromList(macList,allSubTypesList)
-
-		// iterate over all macros of one specific subtype
-		for(j=0; j < ItemsInList(macList);j+=1)
-			mac = StringFromList(j,macList)
-			paramString   = getMacroParams(mac,options)
-			decoratedList = AddListItem( formatDecl(mac,paramString,subType), decoratedList, ";")
+	// extract Variable types and names inside each content line to return lstTypes and lstNames
+	lstTypes = ""
+	lstNames = ""
+	numMatches = DimSize(wavLineNumber, 0)
+	for(i = 0; i < numMatches; i += 1)
+		SplitString/E=regExp wavContent[(wavLineNumber[i])], strType, lstVariables
+		numVariables = ItemsInList(lstVariables, ",")
+		for(j = 0; j < numVariables; j += 1)
+			lstTypes = AddListItem(strType, lstNames)
+			lstNames = AddListItem(getVariableName(StringFromList(j, lstVariables, ",")), lstNames)
 		endfor
 	endfor
 
-	subType=""
-	// add all macros without a subtype
-	for(j=0; j < ItemsInList(allSubTypesList);j+=1)
-		mac = StringFromList(j,allSubTypesList)
-		paramString   = getMacroParams(mac,optionsAllSubtypes)
-		decoratedList = AddListItem( formatDecl(mac,paramString,subtype), decoratedList, ";")
-	endfor
+	// sort elements depending on checkbox status
+	lstNames = RemoveEnding(lstNames,", ") // do not sort last element.
+	if(returnCheckBoxSort())
+		lstNames = Sortlist(lstNames,", ",16)
+	endif
 
-	return decoratedList
+	// format output
+	lstTypes = RemoveEnding(lstTypes,";")
+	lstNames = RemoveEnding(lstNames,";")
+	lstNames = ReplaceString(";", lstNames, ", ")
+	lstTypes = ReplaceString(";", lstTypes, ", ")
+
+	return "{" + lstNames + "}"
+End
+
+Function/S getVariableName(strDefinition)
+	String strDefinition
+	String strVariableName, strStartValue
+	String regExp
+
+	regExp = "^(?i)[[:space:]]*([^\=\/[:space:]]+)[[:space:]]*(?:\=[[:space:]]*([^\,\=\/[:space:]]+))?.*"
+	SplitString/E=regExp strDefinition, strVariableName, strStartValue
+
+	// there must be sth. wrong if the variable could not be found.
+	if (strlen(strVariableName)==0)
+		DebugPrint("Could not analyze Name of Variable in String: '" + strDefinition + "'")
+		Abort "Could not analyze Name of Variable in String: " + strDefinition
+	endif
+
+	return	 strVariableName
+End
+
+static Function resetLists(decls, lines)
+	Wave/T decls
+	Wave/D lines
+	Redimension/N=(0, -1) decls, lines
+End
+
+static Function sortListByLineNumber(decls, lines)
+	Wave/T decls
+	Wave/D lines
+	Duplicate/T/FREE/R=[][0] decls, declCol0
+	Duplicate/T/FREE/R=[][1] decls, declCol1
+	Sort/A lines, lines, declCol0, declCol1
+	decls[][0] = declCol0[p][0]
+	decls[][1] = declCol1[p][0]
+End
+
+static Function sortListByName(decls, lines)
+	Wave/T decls
+	Wave/D lines
+	Duplicate/T/FREE/R=[][0] decls, declCol0
+	Duplicate/T/FREE/R=[][1] decls, declCol1
+	Sort/A declCol1, lines, declCol0, declCol1
+	decls[][0] = declCol0[p][0]
+	decls[][1] = declCol1[p][0]
 End
 
 // Parses all procedure windows and write into the decl and line waves
 Function/S parseAllProcedureWindows()
-
-	string options, funcList, macList, list=""
 	string module = getCurrentItem(module=1)
 	string procedure = getCurrentItem(procedure=1)
 	string procedureWithoutModule = getCurrentItem(procedureWithoutModule=1)
 
-	// list normal, userdefined, override and static functions
-	options  = "KIND:18,WIN:" + procedure
-	funcList = FunctionList("*",";",options)
-
-	macList  = getDecoratedMacroList(procedureWithoutModule)
-
-	if (returnCheckBoxSort())
-		list = SortList(funcList + macList,";",4) //option 4: Case-insensitive sort
-	else
-		list = funcList + macList
-	endif
-
 	Wave/T decls = getDeclWave()
 	Wave/D lines = getLineWave()
-	decorateFunctionNames(module, list, procedure,  decls, lines)
+
+	resetLists(decls, lines)
+	addDecoratedFunctions(module, procedure,  decls, lines)
+	addDecoratedConstants(module, procedureWithoutModule,  decls, lines)
+	addDecoratedMacros(module, procedureWithoutModule,  decls, lines)
+	addDecoratedStructure(module, procedureWithoutModule,  decls, lines)
+
+	if(returnCheckBoxSort())
+		sortListByName(decls, lines)
+	else
+		sortListByLineNumber(decls, lines)
+	endif
 End
 
 // Returns a list with the following optional suffixes removed:
@@ -434,6 +600,18 @@ Function/S nicifyProcedureList(list)
 	endfor
 
 	return niceList
+End
+
+// returns code of procedure in module
+Function/S getProcedureText(module, procedureWithoutModule)
+	String module, procedureWithoutModule
+	if(isProcGlobal(module))
+		debugPrint(module + " is in ProcGlobal")
+		return ProcedureText("", 0, procedureWithoutModule)
+	else
+		debugPrint(procedureWithoutModule + " is in " + module)
+		return ProcedureText("", 0, procedureWithoutModule + " [" + module + "]")
+	endif
 End
 
 // Returns a list of all procedures windows in ProcGlobal context
@@ -514,7 +692,7 @@ Function/Wave getLineWave()
 	return wv
 End
 
-// Shows the line/function for the function/macro with the given index into decl
+// Shows the line for the Element with the given index into decl
 // With no index just the procedure file is shown
 Function showCode(procedure,[index])
 	string procedure
@@ -533,8 +711,7 @@ Function showCode(procedure,[index])
 	endif
 
 	if( lines[index] < 0 )
-		string func     = getShortFuncOrMacroName(decl[index][1])
-		DisplayProcedure/W=$procedure func
+		debugprint("line number missing")
 	else
 		DisplayProcedure/W=$procedure/L=(lines[index])
 	endif

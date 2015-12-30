@@ -138,3 +138,27 @@ Function/S RemoveEverythingAfter(str,findStr)
 		return str[0,idx-1]
 	endif
 End
+
+// returns a List where leading and trailing spaces are missing.
+// optionally replaces the separation string
+Function/S trimArgument(lstArguments, strListSepString, [strListSepStringOutput])
+	String lstArguments, strListSepString, strListSepStringOutput
+	if( ParamIsDefault(strListSepStringOutput) )
+		strListSepStringOutput = strListSepString
+	endif
+
+	String strParsed, lstArgumentsTrimmed = ""
+	Variable j
+
+	for(j = 0; j < ItemsInList(lstArguments, strListSepString); j += 1)
+		strParsed = ""
+		SplitString /E="(?:[[:space:]]*)([^[:space:]]+)(?:[[:space:]]*)" StringFromList(j,lstArguments,strListSepString), strParsed
+		lstArgumentsTrimmed = AddListItem(strParsed, lstArgumentsTrimmed, strListSepString, ItemsInList(lstArgumentsTrimmed, strListSepString))
+	endfor
+	if(j > 0)
+		lstArgumentsTrimmed = RemoveEnding(lstArgumentsTrimmed,strListSepString)
+	endif
+	lstArgumentsTrimmed = ReplaceString(strListSepString, lstArgumentsTrimmed, strListSepStringOutput)
+
+	return lstArgumentsTrimmed
+End
