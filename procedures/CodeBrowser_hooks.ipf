@@ -32,10 +32,14 @@ Function initializePanel()
 
 	debugprint("called")
 
-	Execute/Q "SetIgorOption IndependentModuleDev=1"
-
+	Execute/Z/Q "SetIgorOption IndependentModuleDev=1"
+	if (!(V_flag == 0))
+		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
+	endif
+	
 	SetIgorHook AfterCompiledHook=updatePanel
-	debugprint("AfterCompiledHook: " + S_info)
+	debugPrint("AfterCompiledHook: " + S_info)
+
 	updatePanel()
 End
 
@@ -43,9 +47,9 @@ End
 Function preparePanelClose()
 
 	SetIgorHook/K AfterCompiledHook=updatePanel
-	debugprint("AfterCompiledHook: " + S_info)
+	debugPrint("AfterCompiledHook: " + S_info)
 
-	// reset Waves needed for Storage
+	// storage data should not be saved in experiment
 	saveResetStorage()
 
 	DoWindow $GetPanel()

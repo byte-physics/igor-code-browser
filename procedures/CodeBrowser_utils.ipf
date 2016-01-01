@@ -225,6 +225,34 @@ Function/S getGlobalStr(globalVar)
 	endif
 End
 
+Function killGlobalStr(globalVar)
+	String globalVar
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	KillStrings/Z dfr:$globalVar
+
+	if (!SVAR_Exists(myVar))
+		return 1
+	else
+		return 0
+	endif
+End
+
+Function killGlobalVar(globalVar)
+	String globalVar
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+
+	KillVariables/Z dfr:$globalVar
+
+	if (!NVAR_Exists(myVar))
+		return 1
+	else
+		return 0
+	endif
+End
+
 // extended function of WM's startMSTimer
 Function timerStart()
 	Variable timerRefNum

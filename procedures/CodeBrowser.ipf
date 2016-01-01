@@ -333,31 +333,34 @@ Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWa
 	Variable numLines, i, idx, numEntries, numMatches
 	String procText, re, def, name
 
+	// get procedure code
 	procText = getProcedureText(module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
+	
+	// search code and return wavLineNumber
 	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
-
 	re = "^(?i)[[:space:]]*((?:override)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+(.*)=.*"
-	Grep/Q/INDX/E=re text
-
+	Grep/Q/INDX/E=re text	
+	Wave W_Index
+	Duplicate/FREE W_Index wavLineNumber
+	KillWaves/Z W_Index
+	KillStrings/Z S_fileName
+	WaveClear W_Index
 	if(!V_Value) // no matches
-		KillWaves/Z W_Index
 		return 0
 	endif
 
-	Wave W_Index
-	numMatches = DimSize(W_Index, 0)
+	numMatches = DimSize(wavLineNumber, 0)
 	numEntries = DimSize(declWave, 0)
-
 	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
 
 	idx = numEntries
 	for(i = 0; i < numMatches; i += 1)
-		SplitString/E=re text[W_Index[i]], def, name
+		SplitString/E=re text[wavLineNumber[i]], def, name
 
 		declWave[idx][0] = createMarkerForType(LowerStr(def))
 		declWave[idx][1] = name
-		lineWave[idx]    = W_Index[i]
+		lineWave[idx]    = wavLineNumber[i]
 		idx += 1
 	endfor
 
@@ -372,36 +375,38 @@ Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
 	Variable numLines, i, idx, numEntries, numMatches
 	String procText, re, def, name, arguments, type
 
+	// get procedure code
 	procText = getProcedureText(module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 
+	// search code and return wavLineNumber
 	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// regexp: match case insensitive (?i) spaces don't matter. search for window or macro or proc. Macro Name is the the next non-space character followed by brackets () where the arguments are. At the end there might be a colon, specifying the type of macro and a comment beginning with /
 	// macro should have no arguments. Handled for backwards compatibility.
 	// help for regex on https://regex101.com/
 	re = "^(?i)[[:space:]]*(window|macro|proc)[[:space:]]+([^[:space:]]+)[[:space:]]*\((.*)\)[[:space:]]*[:]?[[:space:]]*([^[:space:]\/]*).*"
 	Grep/Q/INDX/E=re text
-
+	Wave W_Index
+	Duplicate/FREE W_Index wavLineNumber
+	KillWaves/Z W_Index
+	KillStrings/Z S_fileName
+	WaveClear W_Index
 	if(!V_Value) // no matches
-		KillWaves/Z W_Index
 		return 0
 	endif
 
-	Wave W_Index
-	numMatches = DimSize(W_Index, 0)
+	numMatches = DimSize(wavLineNumber, 0)
 	numEntries = DimSize(declWave, 0)
 	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
 
 	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
-		SplitString/E=re text[W_Index[(idx - numEntries)]], def, name, arguments, type
+		SplitString/E=re text[wavLineNumber[(idx - numEntries)]], def, name, arguments, type
 		// def containts window/macro/proc
 		// type contains Panel/Layout for subclasses of window macros
 		declWave[idx][0] = createMarkerForType(LowerStr(def))
 		declWave[idx][1] = name + "(" +  trimArgument(arguments, ",", strListSepStringOutput = ", ") + ")" + " : " + type
-		lineWave[idx]    = W_Index[(idx - numEntries)]
+		lineWave[idx]    = wavLineNumber[(idx - numEntries)]
 	endfor
-
-	KillWaves/Z W_Index
 End
 
 Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWave, [parseVariables])
@@ -416,13 +421,15 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 	variable numLines, i, idx, numEntries, numMatches
 	string procText, reStart, reEnd, name, StaticKeyword
 
+	// get procedure code
 	procText = getProcedureText(module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 	if (numLines == 0)
 		debugPrint("no Content in Procedure " + procedureWithoutModule)
 	endif
-	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 
+	// search code and return wavLineNumber
+	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// regexp: match case insensitive (?i) leading spaces don't matter. optional static statement. search for structure name which contains no spaces. followed by an optional space and nearly anything like inline comments
 	// help for regex on https://regex101.com/
 	reStart = "^(?i)[[:space:]]*((?:static[[:space:]])?)[[:space:]]*structure[[:space:]]+([^[:space:]\/]+)[[:space:]\/]?.*"
@@ -430,12 +437,14 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 	Wave W_Index
 	Duplicate/FREE W_Index wavStructureStart
 	KillWaves/Z W_Index
+	KillStrings/Z S_fileName
 	WaveClear W_Index
 	if(!V_Value) // no matches
 		return 0
 	endif
 	numMatches = DimSize(wavStructureStart, 0)
 
+	// optionally analyze structure elements
 	if(parseVariables)
 		// regexp: match case insensitive endstructure followed by (space or /) and anything else or just a lineend
 		// does not match endstructure23 but endstructure//
@@ -444,6 +453,7 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		Wave W_Index
 		Duplicate/FREE W_Index wavStructureEnd
 		KillWaves/Z W_Index
+		KillStrings/Z S_fileName
 		WaveClear W_Index
 		if (numMatches != DimSize(wavStructureEnd, 0))
 			numMatches = 0
@@ -458,15 +468,18 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		SplitString/E=reStart text[wavStructureStart[(idx - numEntries)]], StaticKeyword, name
 		declWave[idx][0] = createMarkerForType(LowerStr(StaticKeyword) + "structure") // no " " between static and structure needed
 		declWave[idx][1] = name
+
+		// optionally parse structure elements
 		if (parseVariables)
 			Duplicate/FREE/R=[(wavStructureStart[(idx - numEntries)]),(wavStructureEnd[(idx - numEntries)])] text, temp
 			declWave[idx][1] += getStructureElements(temp)
-			WaveClear temp
-
+			WaveClear temp			
 		endif
+
 		lineWave[idx]    = wavStructureStart[(idx - numEntries)]
 	endfor
-
+	
+	WaveClear wavStructureStart, wavStructureEnd
 End
 
 // input wave (wavStructure) contains text of Structure lineseparated.
@@ -484,17 +497,19 @@ Function/S getStructureElements(wavStructure)
 		return ""
 	endif
 
-	// parse code for returning wavLineNumber and wavContent
+	// search code and return wavLineNumber and wavContent
 	Duplicate/T/FREE/R=[1,(numElements-1)] wavStructure wavContent
 	regExp = "^(?i)[[:space:]]*(" + cstrTypes + ")[[:space:]]+(?:\/[a-z]+[[:space:]]*)*([^\/]*)(?:[\/].*)?"
 	Grep/Q/INDX/E=regExp wavContent
 	Wave W_Index
-	if(!V_Value) // no matches
-		DebugPrint("No Elements found")
-		return "()"
-	endif
 	Duplicate/FREE W_Index wavLineNumber
 	KillWaves/Z W_Index
+	KillStrings/Z S_fileName
+	WaveClear W_Index
+	if(!V_Value) // no matches
+		DebugPrint("Structure with no Elements found")
+		return "()"
+	endif
 
 	// extract Variable types and names inside each content line to return lstTypes and lstNames
 	lstTypes = ""
@@ -738,10 +753,20 @@ Function saveResetStorage()
 	Wave savedVariablesWave = getSaveVariables()
 	Wave/T SavedStringsWave = getSaveStrings()
 	Wave/WAVE SavedWavesWave = getSaveWaves()
-	// if waves are in use. Mark for ReParse
-	saveReParse()
-	Killwaves/Z savedVariablesWave, SavedStringsWave, SavedWavesWave
 
+	// if objects are in use they can not be killed. reset before killing
+
+	// reset
+	saveReParse()
+	setGlobalStr("parsingChecksum","")
+	setGlobalVar("checksumTime",NaN)
+	setGlobalVar("parsingTime",NaN)
+
+	// kill
+	Killwaves/Z savedVariablesWave, SavedStringsWave, SavedWavesWave
+	killGlobalStr("parsingChecksum")
+	killGlobalVar("checksumTime")
+	killGlobalvar("parsingTime")
 End
 
 // Returns a list with the following optional suffixes removed:
@@ -767,9 +792,12 @@ End
 // returns code of procedure in module
 Function/S getProcedureText(module, procedureWithoutModule)
 	String module, procedureWithoutModule
+	String strProcedure
+
 	if(isProcGlobal(module))
 		debugPrint(module + " is in ProcGlobal")
-		return ProcedureText("", 0, procedureWithoutModule)
+		strProcedure = ProcedureText("", 0, procedureWithoutModule)
+		return strProcedure
 	else
 		debugPrint(procedureWithoutModule + " is in " + module)
 		return ProcedureText("", 0, procedureWithoutModule + " [" + module + "]")
@@ -870,6 +898,7 @@ Function/S getModuleList()
 
 	moduleList = IndependentModuleList(";")
 	moduleList = ListMatch(moduleList,"!WM*",";") // skip WM modules
+	moduleList = ListMatch(moduleList,"!RCP*",";") // skip WM's Resize Controls modul
 	String module = GetIndependentModuleName()
 
 	if(!debuggingEnabled && !isProcGlobal(module))

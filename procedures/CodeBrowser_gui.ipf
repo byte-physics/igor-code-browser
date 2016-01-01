@@ -146,14 +146,14 @@ End
 // Installed as AfterCompiledHook
 Function updatePanel()
 
+	saveReParse()
+	debugPrint("All Procedures were marked for parsing")
+
 	DoWindow $panel
 	if(V_flag == 0)
 		return 0
 	endif
 	debugPrint("panel exists")
-
-	saveReParse()
-	debugPrint("All Procedures were marked for parsing")
 
 	ControlUpdate/A/W=$panel
 	updateListBoxHook()
