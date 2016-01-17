@@ -839,6 +839,8 @@ Function updateListBoxHook()
 	else
 		sortListByLineNumber(decls, lines)
 	endif
+
+	return DimSize(decls, 0)
 End
 
 // Shows the line/function for the function/macro with the given index into decl
