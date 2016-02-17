@@ -565,6 +565,12 @@ End
 static Function sortListByLineNumber(decls, lines)
 	Wave/T decls
 	Wave/D lines
+	
+	// check if sort is necessary
+	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
+		return 0
+	endif
+	
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Sort/A lines, lines, declCol0, declCol1
@@ -575,6 +581,12 @@ End
 static Function sortListByName(decls, lines)
 	Wave/T decls
 	Wave/D lines
+	
+	// check if sort is necessary
+	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
+		return 0
+	endif
+	
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Sort/A declCol1, lines, declCol0, declCol1
@@ -809,6 +821,8 @@ Function updateListBoxHook()
 	STRUCT procedure procedure
 	Variable returnState
 
+	String searchString = ""
+
 	// load global lists (for sort)
 	Wave/T decls = getDeclWave()
 	Wave/I lines = getLineWave()
@@ -833,7 +847,13 @@ Function updateListBoxHook()
 		saveResults(procedure)
 	endif
 
-	// check if sort is necessary
+	// check if search is necessary
+	searchString = getGlobalStr("search")
+	if(strlen(searchString)>0)
+		searchAndDelete(decls, lines, searchString)
+	endif
+
+	// switch sort type
 	if(returnCheckBoxSort())
 		sortListByName(decls, lines)
 	else
@@ -841,6 +861,36 @@ Function updateListBoxHook()
 	endif
 
 	return DimSize(decls, 0)
+End
+
+Function searchAndDelete(decls, lines, searchString)
+	Wave/T decls
+	Wave/I lines
+	String searchString
+	
+	Variable i, numEntries
+	
+	// search and delete backwards for simplicity reasons
+	numEntries = Dimsize(decls, 0)
+	for (i = numEntries - 1; i > 0; i -= 1)
+		if (strsearch(decls[i][1], searchString, 0, 2) == -1)
+			DeletePoints/M=0 i, 1, decls, lines
+		endif
+	endfor
+
+	// prevent loss of dimension if no match was found at all.
+	if (strsearch(decls[0][1], searchString, 0, 2) == -1)
+		if (Dimsize(decls, 0) == 1)
+			Redimension/N=(0,-1) decls, lines
+		else
+			DeletePoints/M=0 i, 1, decls, lines
+		endif
+	endif
+End
+
+Function searchReset()
+	setGlobalStr("search","")
+	killGlobalStr("search")
 End
 
 // Shows the line/function for the function/macro with the given index into decl
