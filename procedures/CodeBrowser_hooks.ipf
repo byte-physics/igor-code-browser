@@ -61,6 +61,9 @@ Function preparePanelClose()
 	STRUCT CodeBrowserPrefs prefs
 	FillPackagePrefsStruct(prefs)
 	SavePackagePrefsToDisk(prefs)
+	
+	// reset global gui variables
+	searchReset()
 End
 
 Function panelHook(s)
