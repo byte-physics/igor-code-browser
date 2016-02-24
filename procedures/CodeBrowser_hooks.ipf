@@ -6,10 +6,31 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Function IgorBeforeQuitHook(igorApplicationNameStr)
-	string igorApplicationNameStr
+static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedures)
+	variable unsavedExp, unsavedNotebooks, unsavedProcedures
+
+	string expName
 
 	preparePanelClose()
+
+	if(unsavedExp || unsavedNotebooks || unsavedProcedures)
+		return 0
+	endif
+
+	expName = IgorInfo(1)
+
+	if(!cmpstr(expName, "Untitled"))
+		return 0
+	endif
+
+	// experiment saved and pxp still exists -> silently save it
+	// does not support unpacked experiments
+	GetFileFolderInfo/P=home/Q/Z expName + ".pxp"
+	if(!V_Flag)
+		SaveExperiment
+		return 1
+	endif
+
 	return 0
 End
 
