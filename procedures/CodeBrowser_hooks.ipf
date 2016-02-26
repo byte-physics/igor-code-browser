@@ -12,6 +12,7 @@ static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedur
 	string expName
 
 	preparePanelClose()
+	markAsUnInitialized()
 
 	if(unsavedExp || unsavedNotebooks || unsavedProcedures)
 		return 0
@@ -38,14 +39,6 @@ static Function IgorBeforeNewHook(igorApplicationNameStr)
 	string igorApplicationNameStr
 
 	preparePanelClose()
-	return 0
-End
-
-static Function BeforeExperimentSaveHook(rN,fileName,path,type,creator,kind)
-	Variable rN,kind
-	String fileName,path,type,creator
-
-	markAsUnInitialized()
 	return 0
 End
 
