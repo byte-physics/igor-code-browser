@@ -953,9 +953,6 @@ Function/S getModuleList()
 	moduleList = ListMatch(moduleList,"!RCP*",";") // skip WM's Resize Controls modul
 	String module = GetIndependentModuleName()
 
-	if(!debuggingEnabled && !isProcGlobal(module))
-		moduleList = ListMatch(moduleList,"!" + module,";") // skip current module
-	endif
 	moduleList = "ProcGlobal;" + SortList(moduleList)
 
 	return moduleList
