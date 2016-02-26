@@ -55,6 +55,8 @@ Function initializePanel()
 	debugPrint("AfterCompiledHook: " + S_info)
 
 	updatePanel()
+
+	setGlobalStr("search","")
 End
 
 // Prepare for panel closing, must be called before the panel is killed or the experiment closed
