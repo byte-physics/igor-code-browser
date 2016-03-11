@@ -85,6 +85,9 @@ Function preparePanelClose()
 	
 	// reset global gui variables
 	searchReset()
+
+	// clean Package DataFolder
+	DeletePKGfolder()
 End
 
 Function panelHook(s)
