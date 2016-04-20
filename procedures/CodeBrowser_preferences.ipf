@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 103
+static Constant kPrefsVersion = 104
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -15,7 +15,10 @@ Structure CodeBrowserPrefs
 	uint32	version		// Preferences structure version number. 100 means 1.00.
 	double panelCoords[4]	// left, top, right, bottom
 	uint32 panelCheckboxSort 	// status of checkbox in createPanel()
-	uint32 reserved[99]	// Reserved for future use
+	uint32 panelNameSpace	// last marked namespace in panel
+	uint32 panelProcedure	// last marked procedure in panel
+	uint32 panelElement	// last marked element in panel
+	uint32 reserved[96]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -38,8 +41,12 @@ static Function DefaultPackagePrefsStruct(prefs)
 
 	prefs.panelCheckboxSort = 1
 
+	prefs.panelNameSpace = 1
+	prefs.panelProcedure = 1
+	prefs.panelElement   = 0
+
 	Variable i
-	for(i=0; i<99; i+=1)
+	for(i=0; i<96; i+=1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -47,7 +54,7 @@ End
 // Fill package prefs structures to match state of panel.
 static Function SyncPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
-	Variable scale
+	Variable scale, selectedItem
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
 
@@ -64,6 +71,15 @@ static Function SyncPackagePrefsStruct(prefs)
 	prefs.panelCoords[3] = V_bottom * scale
 	
 	prefs.panelCheckboxSort = returnCheckBoxSort()
+
+	selectedItem = getCurrentItemAsNumeric(module = 1)
+	prefs.panelNameSpace = selectedItem < 0 ? 1 : selectedItem
+
+	selectedItem = getCurrentItemAsNumeric(procedure = 1)
+	prefs.panelProcedure = selectedItem < 0 ? 1 : selectedItem
+	
+	selectedItem = getCurrentItemAsNumeric(index = 1)
+	prefs.panelElement   = selectedItem < 0 ? 0 : selectedItem
 End
 
 // InitPackagePrefsStruct(prefs)

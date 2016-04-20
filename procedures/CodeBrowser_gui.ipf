@@ -51,6 +51,7 @@ Function createPanel()
 	PopupMenu $moduleCtrl, win=$panel,pos={0,moduleCtrlTop}, size={panelWidth-2*panelBorder,20}, bodywidth=200
 	PopupMenu $moduleCtrl, win=$panel,title="Namespace"
 	PopupMenu $moduleCtrl, win=$panel,proc=$(module + "#popupModules"),value=#module + "#generateModuleList()"
+	PopupMenu $moduleCtrl, win=$panel, mode=prefs.panelNameSpace
 
 	PopupMenu $moduleCtrl, userdata(ResizeControlsInfo)= A"!!,Cd!!#;-!!#B>J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
 	PopupMenu $moduleCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
@@ -59,6 +60,7 @@ Function createPanel()
 	PopupMenu $procCtrl, win=$panel,pos={0,procCtrlTop}, size={panelWidth-2*panelBorder,20}, bodywidth=200
 	PopupMenu $procCtrl, win=$panel,title="Procedure"
 	PopupMenu $procCtrl, win=$panel,proc=$(module + "#popupProcedures"),value=#module + "#generateProcedureList()"
+	PopupMenu $procCtrl, win=$panel, mode=prefs.panelProcedure
 
 	PopupMenu $procCtrl, userdata(ResizeControlsInfo)= A"!!,D/!!#>.!!#B:J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
 	PopupMenu $procCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
@@ -73,12 +75,13 @@ Function createPanel()
 	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
 	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
 	ListBox $listCtrl, win=$panel,listWave=getDeclWave()
+	ListBox $listCtrl, win=$panel, selRow=prefs.panelElement, row=prefs.panelElement
 
 	ListBox $listCtrl, userdata(ResizeControlsInfo)= A"!!,?X!!#@\"!!#BNJ,hopz!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
 	ListBox $listCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
 	ListBox $listCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S7zzzzzzzzzzzzz!!!"
 
-	CheckBox $sortCtrl, win=$panel, pos={panelBorder+70,SortCtrlTop},size={40,20},value=prefs.panelCheckboxSort
+	CheckBox $sortCtrl, win=$panel, pos={panelBorder+70,SortCtrlTop},size={40,20},value=(prefs.panelCheckboxSort)
 	CheckBox $sortCtrl, win=$panel, title="sort"
 	CheckBox $sortCtrl, win=$panel, proc=$(module + "#checkboxSort")
 
@@ -258,6 +261,42 @@ Function/S getCurrentItem([module, procedure,procedureWithoutModule, index])
 	endif
 
 	return "_error_"
+End
+
+// Returns the currently selected item from the panel defined by the optional arguments.
+// Argument is returned as number in current list
+// Exactly one optional argument must be given.
+//
+// module:              return selected NameSpace
+// procedure:           return selected procedure
+// index:               return selected index in listbox
+Function getCurrentItemAsNumeric([module, procedure, index])
+	variable module, procedure, index
+
+	string procName
+
+	module                 =  ParamIsDefault(module)                 ? 0 : 1
+	procedure              =  ParamIsDefault(procedure)              ? 0 : 1
+	index                  =  ParamIsDefault(index)                  ? 0 : 1
+
+	// only one optional argument allowed
+	if(module + procedure + index != 1)
+		return -1 // error
+	endif
+
+	if(module)
+		ControlInfo/W=$panel $moduleCtrl
+	elseif(procedure)
+		ControlInfo/W=$panel $procCtrl
+	elseif(index)
+		ControlInfo/W=$panel $listCtrl
+	endif
+
+	if(V_Value >= 0)
+		return V_Value
+	endif
+
+	return -1 // error
 End
 
 // Updates the the given popup menu
