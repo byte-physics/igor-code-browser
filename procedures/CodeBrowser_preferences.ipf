@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 104
+static Constant kPrefsVersion = 105
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -18,7 +18,8 @@ Structure CodeBrowserPrefs
 	uint32 panelNameSpace	// last marked namespace in panel
 	uint32 panelProcedure	// last marked procedure in panel
 	uint32 panelElement	// last marked element in panel
-	uint32 reserved[96]	// Reserved for future use
+	uint32 panelTopElement // top element in listbox (scrolling)
+	uint32 reserved[95]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -44,9 +45,10 @@ static Function DefaultPackagePrefsStruct(prefs)
 	prefs.panelNameSpace = 1
 	prefs.panelProcedure = 1
 	prefs.panelElement   = 0
+	prefs.panelTopElement= 0
 
 	Variable i
-	for(i=0; i<96; i+=1)
+	for(i=0; i<95; i+=1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -80,6 +82,9 @@ static Function SyncPackagePrefsStruct(prefs)
 	
 	selectedItem = getCurrentItemAsNumeric(index = 1)
 	prefs.panelElement   = selectedItem < 0 ? 0 : selectedItem
+	
+	selectedItem = getCurrentItemAsNumeric(indexTop = 1)
+	prefs.panelTopElement   = selectedItem < 0 ? 0 : selectedItem
 End
 
 // InitPackagePrefsStruct(prefs)

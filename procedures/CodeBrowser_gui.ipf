@@ -75,7 +75,7 @@ Function createPanel()
 	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
 	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
 	ListBox $listCtrl, win=$panel,listWave=getDeclWave()
-	ListBox $listCtrl, win=$panel, selRow=prefs.panelElement, row=prefs.panelElement
+	ListBox $listCtrl, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
 
 	ListBox $listCtrl, userdata(ResizeControlsInfo)= A"!!,?X!!#@\"!!#BNJ,hopz!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
 	ListBox $listCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
@@ -270,17 +270,18 @@ End
 // module:              return selected NameSpace
 // procedure:           return selected procedure
 // index:               return selected index in listbox
-Function getCurrentItemAsNumeric([module, procedure, index])
-	variable module, procedure, index
+Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
+	variable module, procedure, index, indexTop
 
 	string procName
 
 	module                 =  ParamIsDefault(module)                 ? 0 : 1
 	procedure              =  ParamIsDefault(procedure)              ? 0 : 1
 	index                  =  ParamIsDefault(index)                  ? 0 : 1
+	indexTop               =  ParamIsDefault(indexTop)               ? 0 : 1
 
 	// only one optional argument allowed
-	if(module + procedure + index != 1)
+	if(module + procedure + index + indexTop != 1)
 		return -1 // error
 	endif
 
@@ -288,11 +289,14 @@ Function getCurrentItemAsNumeric([module, procedure, index])
 		ControlInfo/W=$panel $moduleCtrl
 	elseif(procedure)
 		ControlInfo/W=$panel $procCtrl
-	elseif(index)
+	elseif(index || indexTop)
 		ControlInfo/W=$panel $listCtrl
 	endif
 
 	if(V_Value >= 0)
+		if (indexTop)
+			return V_startRow
+		endif
 		return V_Value
 	endif
 
