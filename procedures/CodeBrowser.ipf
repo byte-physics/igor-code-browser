@@ -333,11 +333,11 @@ Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWa
 	// get procedure code
 	procText = getProcedureText(module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
-	
+
 	// search code and return wavLineNumber
 	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	re = "^(?i)[[:space:]]*((?:override)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+(.*)=.*"
-	Grep/Q/INDX/E=re text	
+	Grep/Q/INDX/E=re text
 	Wave W_Index
 	Duplicate/FREE W_Index wavLineNumber
 	KillWaves/Z W_Index
@@ -470,12 +470,12 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		if (parseVariables)
 			Duplicate/FREE/R=[(wavStructureStart[(idx - numEntries)]),(wavStructureEnd[(idx - numEntries)])] text, temp
 			declWave[idx][1] += getStructureElements(temp)
-			WaveClear temp			
+			WaveClear temp
 		endif
 
 		lineWave[idx]    = wavStructureStart[(idx - numEntries)]
 	endfor
-	
+
 	WaveClear wavStructureStart, wavStructureEnd
 End
 
@@ -562,12 +562,12 @@ End
 static Function sortListByLineNumber(decls, lines)
 	Wave/T decls
 	Wave/D lines
-	
+
 	// check if sort is necessary
 	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
 		return 0
 	endif
-	
+
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Sort/A lines, lines, declCol0, declCol1
@@ -578,12 +578,12 @@ End
 static Function sortListByName(decls, lines)
 	Wave/T decls
 	Wave/D lines
-	
+
 	// check if sort is necessary
 	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
 		return 0
 	endif
-	
+
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Sort/A declCol1, lines, declCol0, declCol1
@@ -864,9 +864,8 @@ Function searchAndDelete(decls, lines, searchString)
 	Wave/T decls
 	Wave/I lines
 	String searchString
-	
 	Variable i, numEntries
-	
+
 	// search and delete backwards for simplicity reasons
 	numEntries = Dimsize(decls, 0)
 	for (i = numEntries - 1; i > 0; i -= 1)

@@ -76,7 +76,7 @@ static Function SyncPackagePrefsStruct(prefs)
 	prefs.panelCoords[1] = V_top * scale
 	prefs.panelCoords[2] = V_right * scale
 	prefs.panelCoords[3] = V_bottom * scale
-	
+
 	prefs.panelCheckboxSort = returnCheckBoxSort()
 
 	selectedItem = getCurrentItemAsNumeric(module = 1)
@@ -84,10 +84,10 @@ static Function SyncPackagePrefsStruct(prefs)
 
 	selectedItem = getCurrentItemAsNumeric(procedure = 1)
 	prefs.panelProcedure = selectedItem < 0 ? 1 : selectedItem
-	
+
 	selectedItem = getCurrentItemAsNumeric(index = 1)
 	prefs.panelElement   = selectedItem < 0 ? 0 : selectedItem
-	
+
 	selectedItem = getCurrentItemAsNumeric(indexTop = 1)
 	prefs.panelTopElement   = selectedItem < 0 ? 0 : selectedItem
 

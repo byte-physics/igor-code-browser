@@ -70,7 +70,7 @@ Function createPanel()
 	DefineGuide/W=$panel UGH1={FB,panelBorder}
 	DefineGuide/W=$panel UGHL={FL,panelBorder}
 	DefineGuide/W=$panel UGHR={FR,panelBorder}
-	
+
 	ListBox $listCtrl, win=$panel,pos={panelBorder,panelTopHeight + panelBorder}, size={panelWidth-2*panelBorder, panelHeight-panelTopHeight-2*panelBorder}
 	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
 	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
@@ -90,7 +90,7 @@ Function createPanel()
 	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
 	setGlobalStr("search", "")
-	
+
 	SetVariable $searchCtrl, pos={panelBorder + 118, SortCtrlTop - 2}, size={175.00, 18.00}, proc=$(module + "#searchSet"),title = "search"
 	SetVariable $searchCtrl, limits={-inf,inf,0}, value=$(pkgFolder + ":search"), live = 1
 
@@ -400,7 +400,7 @@ Function checkboxSort(cba) : CheckBoxControl
 End
 
 // returns 0 if checkbox is deselected or 1 if it is selected.
-Function returnCheckBoxSort()	
+Function returnCheckBoxSort()
 	ControlInfo/W=$panel $sortCtrl
 	if (V_flag == 2)		// Checkbox found?
 		return V_Value

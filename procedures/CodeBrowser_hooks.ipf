@@ -50,7 +50,7 @@ Function initializePanel()
 	if (!(V_flag == 0))
 		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
 	endif
-	
+
 	Execute/Z/Q "SetIgorOption recreateListboxHScroll=1"
 	if (!(V_flag == 0))
 		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
