@@ -44,10 +44,10 @@ static Function DefaultPackagePrefsStruct(prefs)
 
 	prefs.panelCheckboxSort = 1
 
-	prefs.panelNameSpace = 1
-	prefs.panelProcedure = 1
-	prefs.panelElement   = 0
-	prefs.panelTopElement= 0
+	prefs.panelNameSpace  = 1
+	prefs.panelProcedure  = 1
+	prefs.panelElement    = 0
+	prefs.panelTopElement = 0
 
 	prefs.configCleanOnExit = 1
 	prefs.configDebuggingEnabled = 0
@@ -104,7 +104,7 @@ Function FillPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 
 	DoWindow $GetPanel()
-	if (V_flag == 0)
+	if(V_flag == 0)
 		// Panel does not exist. Set prefs struct to default.
 		DefaultPackagePrefsStruct(prefs)
 	else
@@ -120,7 +120,7 @@ Function LoadPackagePrefsFromDisk(prefs)
 	LoadPackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 
 	// If error or prefs not found or not valid, initialize them.
-	if (V_flag!=0 || V_bytesRead==0 || prefs.version!=kPrefsVersion)
+	if(V_flag != 0 || V_bytesRead == 0 || prefs.version != kPrefsVersion)
 		FillPackagePrefsStruct(prefs)	// Set based on panel if it exists or set to default values.
 		SavePackagePrefsToDisk(prefs)	// Create initial prefs record.
 	endif

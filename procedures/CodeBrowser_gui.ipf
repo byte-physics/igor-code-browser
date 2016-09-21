@@ -294,7 +294,7 @@ Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
 	endif
 
 	if(V_Value >= 0)
-		if (indexTop)
+		if(indexTop)
 			return V_startRow
 		endif
 		return V_Value
@@ -342,13 +342,13 @@ End
 Function popupModules(pa) : PopupMenuControl
 	STRUCT WMPopupAction &pa
 
-	switch( pa.eventCode )
+	switch(pa.eventCode)
 		case 2: // mouse up
 			debugprint("mouse up")
 
 			string module = pa.popStr
 
-			if( isEmpty(module) )
+			if(isEmpty(module))
 				break
 			endif
 
@@ -366,13 +366,13 @@ End
 Function popupProcedures(pa) : PopupMenuControl
 	STRUCT WMPopupAction &pa
 
-	switch( pa.eventCode )
+	switch(pa.eventCode)
 		case 2: // mouse up
 			debugprint("mouse up")
 
 			string procedure = pa.popStr
 
-			if( isEmpty(procedure) )
+			if(isEmpty(procedure))
 				break
 			endif
 
@@ -388,7 +388,7 @@ End
 Function checkboxSort(cba) : CheckBoxControl
 	STRUCT WMCheckboxAction &cba
 
-	switch( cba.eventCode )
+	switch(cba.eventCode)
 		case 2: // mouse up
 			updateListBoxHook()
 			break
@@ -402,7 +402,7 @@ End
 // returns 0 if checkbox is deselected or 1 if it is selected.
 Function returnCheckBoxSort()
 	ControlInfo/W=$panel $sortCtrl
-	if (V_flag == 2)		// Checkbox found?
+	if(V_flag == 2)		// Checkbox found?
 		return V_Value
 	else
 		//Fallback: Sorting as default behaviour
@@ -439,7 +439,7 @@ Function listBoxProc(lba) : ListBoxControl
 	WAVE/Z selWave = lba.selWave
 	string procedure
 
-	switch( lba.eventCode )
+	switch(lba.eventCode)
 		case -1: // control being killed
 			break
 		case 1: // mouse down

@@ -37,17 +37,17 @@ Function/S addToItemsInList(list, [sep, suffix, prefix])
 		prefix = ""
 	endif
 
-	if(strsearch(suffix,sep,0) != -1 || strsearch(prefix,sep,0) != -1)
+	if(strsearch(suffix, sep, 0) != -1 || strsearch(prefix, sep, 0) != -1)
 		Abort
 	endif
 
 	variable i
-	string resultList="", item
+	string resultList = "", item
 
 	variable numItems = ItemsInList(list,sep)
-	for(i=0; i < numItems;i+=1)
-		item = prefix + StringFromList(i,list) + suffix
-		resultList = AddListItem(item,resultList,sep,inf)
+	for(i = 0; i < numItems; i += 1)
+		item = prefix + StringFromList(i, list) + suffix
+		resultList = AddListItem(item, resultList, sep, inf)
 	endfor
 
 	return resultList
@@ -56,23 +56,23 @@ End
 Function isProcGlobal(module)
 	string module
 
-	return cmpstr(module,"ProcGlobal") == 0
+	return cmpstr(module, "ProcGlobal") == 0
 End
 
 // Returns the dimension of the first screen
 Function GetScreenDimensions(rect)
 	STRUCT RECT &rect
 
-	string str   = StringByKey("SCREEN1",IgorInfo(0))
-	variable idx = strsearch(str,"RECT=",0)
+	string str   = StringByKey("SCREEN1", IgorInfo(0))
+	variable idx = strsearch(str, "RECT=",0)
 
 	if(idx == -1)
 		Abort "Unexpected information returned from IgorInfo(0)"
 	endif
 
-	str = str[idx+5,inf]
+	str = str[idx+5, inf]
 
-	if(ItemsInList(str,",") != 4)
+	if(ItemsInList(str, ",") != 4)
 		Abort "Could not find four values separated by ,"
 	endif
 
@@ -104,9 +104,9 @@ Function/DF createDFWithAllParents(dataFolder)
 	endif
 
 	 // i=1 because we want to skip root, as this exists always
-	for(i=1; i < ItemsInList(dataFolder,":"); i+=1)
+	for(i = 1; i < ItemsInList(dataFolder, ":"); i += 1)
 		partialPath += ":"
-		partialPath += StringFromList(i,dataFolder,":")
+		partialPath += StringFromList(i, dataFolder, ":")
 		if(!DataFolderExists(partialPath))
 			NewDataFolder $partialPath
 		endif
@@ -121,7 +121,7 @@ Function/S getShortFuncOrMacroName(decl)
 
 	variable idx = strsearch(decl, "(", 0)
 	if(idx > 0)
-		return decl[0, idx-1]
+		return decl[0, idx - 1]
 	else
 		return decl
 	endif
@@ -131,11 +131,11 @@ End
 Function/S RemoveEverythingAfter(str,findStr)
 	string str, findStr
 
-	variable idx = strsearch(str,findStr,0)
+	variable idx = strsearch(str, findStr, 0)
 	if(idx == -1)
 		return str
 	else
-		return str[0,idx-1]
+		return str[0, idx - 1]
 	endif
 End
 
@@ -152,7 +152,7 @@ Function/S trimArgument(lstArguments, strListSepString, [strListSepStringOutput]
 
 	for(j = 0; j < ItemsInList(lstArguments, strListSepString); j += 1)
 		strParsed = ""
-		SplitString /E="(?:[[:space:]]*)([^[:space:]]+)(?:[[:space:]]*)" StringFromList(j,lstArguments,strListSepString), strParsed
+		SplitString /E="(?:[[:space:]]*)([^[:space:]]+)(?:[[:space:]]*)" StringFromList(j, lstArguments, strListSepString), strParsed
 		lstArgumentsTrimmed = AddListItem(strParsed, lstArgumentsTrimmed, strListSepString, ItemsInList(lstArgumentsTrimmed, strListSepString))
 	endfor
 	if(j > 0)
@@ -171,7 +171,7 @@ Function setGlobalVar(globalVar, numValue)
 	Variable/G dfr:$globalVar
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 
-	if (!NVAR_Exists(myVar))
+	if(!NVAR_Exists(myVar))
 		DebugPrint("global Variable " + globalVar + " failed to create")
 		return 0
 	else
@@ -187,7 +187,7 @@ Function getGlobalVar(globalVar)
 
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 
-	if (!NVAR_Exists(myVar))
+	if(!NVAR_Exists(myVar))
 		return -1
 	else
 		return myVar
@@ -202,7 +202,7 @@ Function setGlobalStr(globalVar, strValue)
 	String/G dfr:$globalVar
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 
-	if (!SVAR_Exists(myVar))
+	if(!SVAR_Exists(myVar))
 		DebugPrint("global String " + globalVar + " failed to create")
 		return 0
 	else
@@ -218,7 +218,7 @@ Function/S getGlobalStr(globalVar)
 
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 
-	if (!SVAR_Exists(myVar))
+	if(!SVAR_Exists(myVar))
 		return ""
 	else
 		return myVar
@@ -232,7 +232,7 @@ Function killGlobalStr(globalVar)
 
 	KillStrings/Z dfr:$globalVar
 
-	if (!SVAR_Exists(myVar))
+	if(!SVAR_Exists(myVar))
 		return 1
 	else
 		return 0
@@ -246,7 +246,7 @@ Function killGlobalVar(globalVar)
 
 	KillVariables/Z dfr:$globalVar
 
-	if (!NVAR_Exists(myVar))
+	if(!NVAR_Exists(myVar))
 		return 1
 	else
 		return 0
@@ -258,7 +258,7 @@ Function timerStart()
 	Variable timerRefNum
 	timerRefNum = startMSTimer
 
-	if (timerRefNum == -1)
+	if(timerRefNum == -1)
 		DebugPrint("All timers are in use")
 		return -1
 	endif
@@ -271,7 +271,7 @@ Function timerStop(timerRefNum)
 	Variable timerRefNum
 	Variable microseconds
 
-	if (timerRefNum == -1)
+	if(timerRefNum == -1)
 		DebugPrint("Timer failed. Using 0ms")
 		return 0
 	endif

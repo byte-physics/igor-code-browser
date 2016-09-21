@@ -47,12 +47,12 @@ Function initializePanel()
 	debugprint("called")
 
 	Execute/Z/Q "SetIgorOption IndependentModuleDev=1"
-	if (!(V_flag == 0))
+	if(!(V_flag == 0))
 		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
 	endif
 
 	Execute/Z/Q "SetIgorOption recreateListboxHScroll=1"
-	if (!(V_flag == 0))
+	if(!(V_flag == 0))
 		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
 	endif
 
@@ -61,7 +61,7 @@ Function initializePanel()
 
 	updatePanel()
 
-	setGlobalStr("search","")
+	setGlobalStr("search", "")
 End
 
 // Prepare for panel closing, must be called before the panel is killed or the experiment closed

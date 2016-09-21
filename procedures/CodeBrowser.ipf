@@ -63,35 +63,35 @@ Function/S interpretParamType(ptype, paramOrReturn)
 		Abort "paramOrReturn must be 1 or 0"
 	endif
 
-	if (ptype & 0x4000)
+	if(ptype & 0x4000)
 		typeStr += "wave"
 
 		// type addon
-		if (ptype & 0x1)
+		if(ptype & 0x1)
 			typeStr += "/C"
 		endif
 
 		 // text wave for parameters only. Seems to be a bug in the documentation or Igor. Already reported to WM.
 		if(ptype == 0x4000 && paramOrReturn)
 			typeStr += "/T"
-		elseif (ptype & 0x4)
+		elseif(ptype & 0x4)
 			typeStr += "/D"
-		elseif (ptype & 0x2)
+		elseif(ptype & 0x2)
 //			this is the default wave type, this is printed 99% of the time so we don't output it
 //			typeStr += "/R"
-		elseif (ptype & 0x8)
+		elseif(ptype & 0x8)
 			typeStr += "/B"
-		elseif (ptype & 0x10)
+		elseif(ptype & 0x10)
 			typeStr += "/W"
-		elseif (ptype & 0x20)
+		elseif(ptype & 0x20)
 			typeStr += "/I"
-		elseif (ptype & 0x80) // undocumented
+		elseif(ptype & 0x80) // undocumented
 			typeStr += "/WAVE"
-		elseif (ptype & 0x100)
+		elseif(ptype & 0x100)
 			typeStr += "/DF"
 		endif
 
-		if (ptype & 0x40)
+		if(ptype & 0x40)
 			typeStr += "/U"
 		endif
 
@@ -105,29 +105,29 @@ Function/S interpretParamType(ptype, paramOrReturn)
 	endif
 
 	// special casing
-	if (ptype == 0x5)
+	if(ptype == 0x5)
 		return "imag"
-	elseif (ptype == 0x1005)
+	elseif(ptype == 0x1005)
 		return "imag&"
 	endif
 
-	if (ptype & 0x2000)
+	if(ptype & 0x2000)
 		typeStr += "str"
-	elseif (ptype & 0x4)
+	elseif(ptype & 0x4)
 		typeStr += "var"
-	elseif (ptype & 0x100)
+	elseif(ptype & 0x100)
 		typeStr += "dfref"
-	elseif (ptype & 0x200)
+	elseif(ptype & 0x200)
 		typeStr += "struct"
-	elseif (ptype & 0x400)
+	elseif(ptype & 0x400)
 		typeStr += "funcref"
 	endif
 
-	if (ptype & 0x1)
+	if(ptype & 0x1)
 		typeStr += " imag"
 	endif
 
-	if (ptype & 0x1000)
+	if(ptype & 0x1000)
 		typeStr += "&"
 	endif
 
@@ -184,15 +184,15 @@ End
 Function/S interpretParameters(funcInfo)
 	string funcInfo
 
-	variable numParams = NumberByKey("N_PARAMS",funcInfo)
+	variable numParams = NumberByKey("N_PARAMS", funcInfo)
 	variable i
 	string str = "", key, paramType
 
-	variable numOptParams = NumberByKey("N_OPT_PARAMS",funcInfo)
+	variable numOptParams = NumberByKey("N_OPT_PARAMS", funcInfo)
 
-	for(i = 0; i < numParams; i+= 1)
+	for(i = 0; i < numParams; i += 1)
 		sprintf key, "PARAM_%d_TYPE", i
-		paramType = interpretParamType(NumberByKey(key,funcInfo),1)
+		paramType = interpretParamType(NumberByKey(key, funcInfo), 1)
 
 		if(i == numParams - numOptParams)
 			str += "["
@@ -200,13 +200,13 @@ Function/S interpretParameters(funcInfo)
 
 		str += paramType
 
-		if(i != numParams - 1 )
+		if(i != numParams - 1)
 			str += ", "
 		endif
 	endfor
 
 	if(numOptParams > 0)
-		str +="]"
+		str += "]"
 	endif
 
 	return str
@@ -296,11 +296,11 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 
 	// list normal, userdefined, override and static functions
 	options  = "KIND:18,WIN:" + procedure
-	funcList = FunctionList("*",";",options)
+	funcList = FunctionList("*", ";", options)
 	numMatches = ItemsInList(funcList)
 	numEntries = DimSize(declWave, 0)
 	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
-	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
+	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
 		func = StringFromList(idx, funcList)
 		fi = FunctionInfo(module + "#" + func, procedure)
 		if(isEmpty(fi))
@@ -312,12 +312,12 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
 		params        = interpretParameters(fi)
 		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
-		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType=returnType)
+		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType = returnType)
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 	endfor
 
 	string msg
-	sprintf msg, "decl rows=%d\r", DimSize(declWave,0)
+	sprintf msg, "decl rows=%d\r", DimSize(declWave, 0)
 	debugPrint(msg)
 End
 
@@ -396,7 +396,7 @@ Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
 	numEntries = DimSize(declWave, 0)
 	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
 
-	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
+	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
 		SplitString/E=re text[wavLineNumber[(idx - numEntries)]], def, name, arguments, type
 		// def containts window/macro/proc
 		// type contains Panel/Layout for subclasses of window macros
@@ -411,7 +411,7 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 	WAVE/T declWave
 	WAVE/D lineWave
 	Variable parseVariables
-	if (paramIsDefault(parseVariables) | parseVariables != 1)
+	if(paramIsDefault(parseVariables) | parseVariables != 1)
 		parseVariables = 1 // added for debugging
 	endif
 
@@ -421,7 +421,7 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 	// get procedure code
 	procText = getProcedureText(module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
-	if (numLines == 0)
+	if(numLines == 0)
 		debugPrint("no Content in Procedure " + procedureWithoutModule)
 	endif
 
@@ -452,7 +452,7 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		KillWaves/Z W_Index
 		KillStrings/Z S_fileName
 		WaveClear W_Index
-		if (numMatches != DimSize(wavStructureEnd, 0))
+		if(numMatches != DimSize(wavStructureEnd, 0))
 			numMatches = 0
 			return 0
 		endif
@@ -467,13 +467,13 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		declWave[idx][1] = name
 
 		// optionally parse structure elements
-		if (parseVariables)
+		if(parseVariables)
 			Duplicate/FREE/R=[(wavStructureStart[(idx - numEntries)]),(wavStructureEnd[(idx - numEntries)])] text, temp
 			declWave[idx][1] += getStructureElements(temp)
 			WaveClear temp
 		endif
 
-		lineWave[idx]    = wavStructureStart[(idx - numEntries)]
+		lineWave[idx] = wavStructureStart[(idx - numEntries)]
 	endfor
 
 	WaveClear wavStructureStart, wavStructureEnd
@@ -488,14 +488,14 @@ Function/S getStructureElements(wavStructure)
 	Variable numElements, numMatches, numVariables, i, j
 
 	// check for minimum structure definition structure/endstructure
-	numElements = Dimsize(wavStructure,0)
+	numElements = Dimsize(wavStructure, 0)
 	if(numElements <= 2)
 		DebugPrint("Structure has no Elements")
 		return ""
 	endif
 
 	// search code and return wavLineNumber and wavContent
-	Duplicate/T/FREE/R=[1,(numElements-1)] wavStructure wavContent
+	Duplicate/T/FREE/R=[1, (numElements - 1)] wavStructure wavContent
 	regExp = "^(?i)[[:space:]]*(" + cstrTypes + ")[[:space:]]+(?:\/[a-z]+[[:space:]]*)*([^\/]*)(?:[\/].*)?"
 	Grep/Q/INDX/E=regExp wavContent
 	Wave W_Index
@@ -522,14 +522,14 @@ Function/S getStructureElements(wavStructure)
 	endfor
 
 	// sort elements depending on checkbox status
-	lstNames = RemoveEnding(lstNames,", ") // do not sort last element.
+	lstNames = RemoveEnding(lstNames, ", ") // do not sort last element.
 	if(returnCheckBoxSort())
-		lstNames = Sortlist(lstNames,", ",16)
+		lstNames = Sortlist(lstNames, ", ",16)
 	endif
 
 	// format output
-	lstTypes = RemoveEnding(lstTypes,";")
-	lstNames = RemoveEnding(lstNames,";")
+	lstTypes = RemoveEnding(lstTypes, ";")
+	lstNames = RemoveEnding(lstNames, ";")
 	lstNames = ReplaceString(";", lstNames, ", ")
 	lstTypes = ReplaceString(";", lstTypes, ", ")
 
@@ -545,7 +545,7 @@ Function/S getVariableName(strDefinition)
 	SplitString/E=regExp strDefinition, strVariableName, strStartValue
 
 	// there must be sth. wrong if the variable could not be found.
-	if (strlen(strVariableName)==0)
+	if(strlen(strVariableName) == 0)
 		DebugPrint("Could not analyze Name of Variable in String: '" + strDefinition + "'")
 		Abort "Could not analyze Name of Variable in String: " + strDefinition
 	endif
@@ -564,7 +564,7 @@ static Function sortListByLineNumber(decls, lines)
 	Wave/D lines
 
 	// check if sort is necessary
-	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
+	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
 		return 0
 	endif
 
@@ -580,7 +580,7 @@ static Function sortListByName(decls, lines)
 	Wave/D lines
 
 	// check if sort is necessary
-	if (Dimsize(decls,0) * Dimsize(lines,0) == 0)
+	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
 		return 0
 	endif
 
@@ -595,7 +595,8 @@ End
 Function/S parseProcedure(procedure, [checksumIsCalculated])
 	STRUCT procedure &procedure
 	Variable checksumIsCalculated
-	if (ParamIsDefault(checksumIsCalculated))
+
+	if(ParamIsDefault(checksumIsCalculated))
 		checksumIsCalculated = 0
 	endif
 	DebugPrint("Checksum recalc:" + num2str(checksumIsCalculated))
@@ -625,24 +626,24 @@ static Function saveResults(procedure)
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
 
-	Wave/WAVE	SaveWavesWave		= getSaveWaves()
-	Wave/T 	SaveStringsWave		= getSaveStrings()
-	Wave		SaveVariablesWave	= getSaveVariables()
+	Wave/WAVE SaveWavesWave     = getSaveWaves()
+	Wave/T 	  SaveStringsWave   = getSaveStrings()
+	Wave      SaveVariablesWave	= getSaveVariables()
 
-	Variable endOfWave = Dimsize(SaveWavesWave,0)
+	Variable endOfWave = Dimsize(SaveWavesWave, 0)
 
 	debugPrint("saving Results for " + procedure.id)
 
 	// prepare Waves for data storage.
-	if (procedure.row < 0)
+	if(procedure.row < 0)
 		// maximum data storage was reached, push elements to free last item.
 		savePush()
 		procedure.row = endOfWave - 1
-	elseif (procedure.row == endOfWave)
+	elseif(procedure.row == endOfWave)
 		// redimension waves to fit new elements
-		Redimension/N=((endOfWave+1), -1) SaveStringsWave
-		Redimension/N=((endOfWave+1), -1) SaveWavesWave
-		Redimension/N=((endOfWave+1), -1) SaveVariablesWave
+		Redimension/N=((endOfWave + 1), -1) SaveStringsWave
+		Redimension/N=((endOfWave + 1), -1) SaveWavesWave
+		Redimension/N=((endOfWave + 1), -1) SaveVariablesWave
 	endif
 
 	// save Results. Waves as References to free waves and the Id-Identifier
@@ -665,11 +666,11 @@ static Function saveLoad(procedure)
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
 
-	Wave/WAVE	SaveWavesWave		= getSaveWaves()
-	Wave/T 	SaveStringsWave		= getSaveStrings()
-	Wave		SaveVariablesWave	= getSaveVariables()
+	Wave/WAVE SaveWavesWave     = getSaveWaves()
+	Wave/T    SaveStringsWave   = getSaveStrings()
+	Wave      SaveVariablesWave	= getSaveVariables()
 
-	if((procedure.row < 0) || (procedure.row == Dimsize(SaveStringsWave,0)) || (Dimsize(SaveStringsWave,0) == 0))
+	if((procedure.row < 0) || (procedure.row == Dimsize(SaveStringsWave, 0)) || (Dimsize(SaveStringsWave, 0) == 0))
 		// if maximum storage capacity was reached (procedure.row == -1) or Element not found (procedure.row == endofWave) there is nothing to load.
 		debugPrint("save state not found")
 		return -1
@@ -678,12 +679,12 @@ static Function saveLoad(procedure)
 		// checksum needs to be compared.
 
 		// getting checksum
-		if (setChecksum(procedure) != 1)
+		if(setChecksum(procedure) != 1)
 			debugPrint("error creating variable")
 			return -1
 		endif
 		// comparing checksum
-		if (cmpstr(SaveStringsWave[procedure.row][1],getChecksum()) != 0)
+		if(cmpstr(SaveStringsWave[procedure.row][1],getChecksum()) != 0)
 			// checksum changed. return -2 to indicate that calculation was already done by setChecksum.
 			debugPrint("Checksum missmatch: Procedure has to be reloaded.")
 			return -2
@@ -697,7 +698,7 @@ static Function saveLoad(procedure)
 	// load results from free waves
 	numResults = Dimsize(SaveWavesWave[procedure.row][0], 0)
 	Redimension/N=(numResults, -1) declWave, lineWave
-	if (numResults > 0)
+	if(numResults > 0)
 		WAVE/T load0 = SaveWavesWave[procedure.row][0]
 		WAVE/I load1 = SaveWavesWave[procedure.row][1]
 		declWave[][0] = load0[p][0]
@@ -719,16 +720,16 @@ static Function getSaveRow(Identifier)
 	Variable found, endOfWave
 
 	FindValue/TEXT=Identifier/TXOP=4/Z SaveStrings
-	if (V_value == -1)
+	if(V_value == -1)
 		// element not found
-		return Dimsize(SaveStrings,0)
+		return Dimsize(SaveStrings, 0)
 	else
 		// element found at position V_value
 
 		// check for inconsistency.
-		if (V_value > CsaveMaximum )
+		if(V_value > CsaveMaximum )
 			DebugPrint("Storage capacity exceeded")
-			// should only happen if (CsaveMaximum) was touched on runtime.
+			// should only happen if(CsaveMaximum) was touched on runtime.
 			// Redimension/Deletion of Wave could be possible.
 			return (CsaveMaximum - 1)
 		endif
@@ -742,14 +743,14 @@ static Function savePush()
 	Wave/T SaveStrings = getSaveStrings()
 	Wave/WAVE SaveWavesWave = getSaveWaves()
 	Wave SaveVariables = getSaveVariables()
-	Variable i, endOfWave = Dimsize(SaveStrings,0)
+	Variable i, endOfWave = Dimsize(SaveStrings, 0)
 
 	// moving items.
-	MatrixOp/O SaveVariables = rotateRows(SaveVariables, (endofWave-1))
+	MatrixOp/O SaveVariables = rotateRows(SaveVariables, (endofWave - 1))
 	// MatrixOP is strictly numeric (but fast)
-	for (i=0; i<endofWave;i+=1)
-		SaveWavesWave[i][]	= SaveWavesWave[(i+1)][q]
-		SaveStrings[i][] 	= SaveStrings[(i+1)][q]
+	for(i=0; i<endofWave;i+=1)
+		SaveWavesWave[i][]	= SaveWavesWave[(i + 1)][q]
+		SaveStrings[i][] 	= SaveStrings[(i + 1)][q]
 	endfor
 End
 
@@ -767,9 +768,9 @@ Function saveResetStorage()
 
 	// reset
 	saveReParse()
-	setGlobalStr("parsingChecksum","")
-	setGlobalVar("checksumTime",NaN)
-	setGlobalVar("parsingTime",NaN)
+	setGlobalStr("parsingChecksum", "")
+	setGlobalVar("checksumTime", NaN)
+	setGlobalVar("parsingTime", NaN)
 
 	// kill
 	Killwaves/Z savedVariablesWave, SavedStringsWave, SavedWavesWave
@@ -788,11 +789,11 @@ Function/S nicifyProcedureList(list)
 	variable i, idx
 	string item, niceList=""
 
-	for(i=0; i < ItemsInList(list);i+=1)
-		item = StringFromList(i,list)
-		item = RemoveEverythingAfter(item," [")
-		item = RemoveEverythingAfter(item,".ipf")
-		niceList = AddListItem(item,niceList,";",inf)
+	for(i = 0; i < ItemsInList(list); i += 1)
+		item = StringFromList(i, list)
+		item = RemoveEverythingAfter(item, " [")
+		item = RemoveEverythingAfter(item, ".ipf")
+		niceList = AddListItem(item, niceList, ";", inf)
 	endfor
 
 	return niceList
@@ -825,19 +826,19 @@ Function updateListBoxHook()
 	Wave/I lines = getLineWave()
 
 	// get procedure information
-	procedure.name 		= getCurrentItem(procedureWithoutModule=1)
-	procedure.module 	= getCurrentItem(module=1)
-	procedure.fullName = getCurrentItem(procedure=1) // remove this if maclist is removed
-	procedure.id 	= procedure.module + "#" + procedure.name
-	procedure.row 	= getSaveRow(procedure.id)
+	procedure.name     = getCurrentItem(procedureWithoutModule = 1)
+	procedure.module   = getCurrentItem(module = 1)
+	procedure.fullName = getCurrentItem(procedure = 1) // remove this if maclist is removed
+	procedure.id       = procedure.module + "#" + procedure.name
+	procedure.row      = getSaveRow(procedure.id)
 
 	// load procedure
 	returnState = saveLoad(procedure)
-	if (returnState<0)
+	if(returnState < 0)
 		debugPrint("parsing Procedure")
 		parseProcedure(procedure)
 		// return state -2 means checksum already calculated and stored in global variable.
-		if (!(returnState == -2))
+		if(!(returnState == -2))
 			setCheckSum(procedure)
 		endif
 		// save information in "database"
@@ -846,7 +847,7 @@ Function updateListBoxHook()
 
 	// check if search is necessary
 	searchString = getGlobalStr("search")
-	if(strlen(searchString)>0)
+	if(strlen(searchString) > 0)
 		searchAndDelete(decls, lines, searchString)
 	endif
 
@@ -864,20 +865,21 @@ Function searchAndDelete(decls, lines, searchString)
 	Wave/T decls
 	Wave/I lines
 	String searchString
+
 	Variable i, numEntries
 
 	// search and delete backwards for simplicity reasons
 	numEntries = Dimsize(decls, 0)
-	for (i = numEntries - 1; i > 0; i -= 1)
-		if (strsearch(decls[i][1], searchString, 0, 2) == -1)
+	for(i = numEntries - 1; i > 0; i -= 1)
+		if(strsearch(decls[i][1], searchString, 0, 2) == -1)
 			DeletePoints/M=0 i, 1, decls, lines
 		endif
 	endfor
 
 	// prevent loss of dimension if no match was found at all.
-	if (strsearch(decls[0][1], searchString, 0, 2) == -1)
-		if (Dimsize(decls, 0) == 1)
-			Redimension/N=(0,-1) decls, lines
+	if(strsearch(decls[0][1], searchString, 0, 2) == -1)
+		if(Dimsize(decls, 0) == 1)
+			Redimension/N=(0, -1) decls, lines
 		else
 			DeletePoints/M=0 i, 1, decls, lines
 		endif
@@ -895,7 +897,7 @@ Function DeletePKGfolder()
 	KillWaves/Z decl, line
 	KillDataFolder/Z $pkgFolder
 
-	if (!CountObjects("root:Packages",4))
+	if(!CountObjects("root:Packages", 4))
 		KillDataFolder root:Packages
 	endif
 End
@@ -914,12 +916,12 @@ Function showCode(procedure,[index])
 	Wave/T decl  = getDeclWave()
 	Wave/I lines = getLineWave()
 
-	if(!(index >= 0) || index >= DimSize(decl,0) || index >= DimSize(lines,0))
+	if(!(index >= 0) || index >= DimSize(decl, 0) || index >= DimSize(lines, 0))
 		Abort "Index out of range"
 	endif
 
-	if( lines[index] < 0 )
-		string func     = getShortFuncOrMacroName(decl[index][1])
+	if(lines[index] < 0)
+		string func = getShortFuncOrMacroName(decl[index][1])
 		DisplayProcedure/W=$procedure func
 	else
 		DisplayProcedure/W=$procedure/L=(lines[index])
@@ -943,11 +945,11 @@ Function/S getIMProcWindows(moduleName)
 End
 
 // Low level implementation, returns a sorted list of procedure windows matching regexp and options
-Function/S getProcWindows(regexp,options)
+Function/S getProcWindows(regexp, options)
 	string regexp, options
 
-	string procList = WinList(regexp,";",options)
-	return SortList(procList,";",4)
+	string procList = WinList(regexp, ";", options)
+	return SortList(procList, ";", 4)
 End
 
 // Returns a list of independent modules
@@ -956,8 +958,8 @@ Function/S getModuleList()
 	String moduleList
 
 	moduleList = IndependentModuleList(";")
-	moduleList = ListMatch(moduleList,"!WM*",";") // skip WM modules
-	moduleList = ListMatch(moduleList,"!RCP*",";") // skip WM's Resize Controls modul
+	moduleList = ListMatch(moduleList, "!WM*", ";") // skip WM modules
+	moduleList = ListMatch(moduleList, "!RCP*", ";") // skip WM's Resize Controls modul
 	String module = GetIndependentModuleName()
 
 	moduleList = "ProcGlobal;" + SortList(moduleList)
@@ -972,7 +974,7 @@ Function/Wave getDeclWave()
 	WAVE/Z/T/SDFR=dfr wv = $declarations
 
 	if(!WaveExists(wv))
-		Make/T/N=(128,2) dfr:$declarations/Wave=wv
+		Make/T/N=(128, 2) dfr:$declarations/Wave=wv
 	endif
 
 	return wv
