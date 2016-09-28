@@ -893,6 +893,18 @@ Function searchReset()
 	killGlobalStr("search")
 End
 
+Function DeletePKGfolder()
+	Wave/T decl = getDeclWave()
+	Wave/I line = getLineWave()
+
+	KillWaves/Z decl, line
+	KillDataFolder/Z $pkgFolder
+
+	if (!CountObjects("root:Packages",4))
+		KillDataFolder root:Packages
+	endif
+End
+
 // Shows the line/function for the function/macro with the given index into decl
 // With no index just the procedure file is shown
 Function showCode(procedure,[index])
