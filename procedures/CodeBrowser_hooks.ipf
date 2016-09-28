@@ -100,6 +100,7 @@ Function killPanelRelatedObjects()
 
 	KillWaves/Z decl, line
 	killGlobalStr("search")
+	killGlobalVar("initialized")
 End
 
 Function panelHook(s)

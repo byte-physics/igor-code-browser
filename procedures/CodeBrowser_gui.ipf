@@ -186,27 +186,25 @@ Function markAsUnInitialized()
 		return 0
 	endif
 
-	SetWindow $panel, userdata($oneTimeInitUserData)=""
+	setGlobalVar("initialized", 0)
 	debugPrint("panel marked as uninitialized")
 End
 
 Function markAsInitialized()
-
 	if(!existsPanel())
 		return 0
 	endif
 
-	SetWindow $panel, userdata($oneTimeInitUserData)="1"
+	setGlobalVar("initialized", 1)
 	debugPrint("panel marked as initialized")
 End
 
 Function isInitialized()
-
 	if(!existsPanel())
 		return 0
 	endif
 
-	return cmpstr(GetUserData(panel,"",oneTimeInitUserData),"1") == 0
+	return getGlobalVar("initialized") == 1
 End
 
 // Returns the currently selected item from the panel defined by the optional arguments.
