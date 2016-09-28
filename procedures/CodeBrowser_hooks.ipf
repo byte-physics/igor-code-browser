@@ -70,9 +70,6 @@ Function preparePanelClose()
 	SetIgorHook/K AfterCompiledHook=updatePanel
 	debugPrint("AfterCompiledHook: " + S_info)
 
-	// storage data should not be saved in experiment
-	saveResetStorage()
-
 	DoWindow $GetPanel()
 	if(V_flag == 0)
 		return 0
@@ -82,12 +79,20 @@ Function preparePanelClose()
 	STRUCT CodeBrowserPrefs prefs
 	FillPackagePrefsStruct(prefs)
 	SavePackagePrefsToDisk(prefs)
-	
+
 	// reset global gui variables
 	searchReset()
 
-	// clean Package DataFolder
-	DeletePKGfolder()
+	// delete CodeBrowser related data
+	if(prefs.configCleanOnExit)
+		// storage data will not be saved in experiment
+		saveResetStorage()
+		killGlobalStr("search")
+		killGlobalVar("cleanOnExit")
+		killGlobalVar("debuggingEnabled")
+		// clean Package DataFolder
+		DeletePKGfolder()
+	endif
 End
 
 Function panelHook(s)

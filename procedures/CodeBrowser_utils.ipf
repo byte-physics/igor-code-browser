@@ -86,7 +86,7 @@ End
 Function debugPrint(msg)
 	string msg
 
-	if(debuggingEnabled)
+	if(getGlobalVar("debuggingEnabled") == 1)
 		printf "%s(...): %s\r", GetRTStackInfo(2), RemoveEnding(msg,"\r")
 	endif
 End

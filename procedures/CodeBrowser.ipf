@@ -46,7 +46,6 @@ static StrConstant CsaveWaves 		= "saveWaves"
 static Constant CsaveMaximum = 1024
 
 Constant    openKey           = 46 // ".", the dot
-Constant    debuggingEnabled  = 0
 
 // List of available macro subtypes
 StrConstant subTypeList       = "Graph;GraphStyle;GraphMarquee;Table;TableStyle;Layout;LayoutStyle;LayoutMarquee;ListBoxControl;Panel;ButtonControl;CheckBoxControl;PopupMenuControl;SetVariableControl"
@@ -96,7 +95,7 @@ Function/S interpretParamType(ptype, paramOrReturn)
 			typeStr += "/U"
 		endif
 
-//		if(debuggingEnabled)
+//		if(getGlobalVar("debuggingEnabled") == 1)
 //			string msg
 //			sprintf msg, "type:%d, str:%s", ptype, typeStr
 //			debugPrint(msg)
@@ -317,11 +316,9 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 	endfor
 
-	if(debuggingEnabled)
-		string msg
-		sprintf msg, "decl rows=%d\r", DimSize(declWave,0)
-		debugPrint(msg)
-	endif
+	string msg
+	sprintf msg, "decl rows=%d\r", DimSize(declWave,0)
+	debugPrint(msg)
 End
 
 // Adds Constants/StrConstants by searching for them in the Procedure with a Regular Expression
@@ -890,7 +887,6 @@ End
 
 Function searchReset()
 	setGlobalStr("search","")
-	killGlobalStr("search")
 End
 
 Function DeletePKGfolder()
