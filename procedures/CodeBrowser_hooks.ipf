@@ -89,6 +89,7 @@ Function preparePanelClose()
 		saveResetStorage()
 		killGlobalStr("search")
 		killGlobalVar("cleanOnExit")
+		killGlobalVar("debuggingEnabled")
 		// clean Package DataFolder
 		DeletePKGfolder()
 	endif
