@@ -890,7 +890,6 @@ End
 
 Function searchReset()
 	setGlobalStr("search","")
-	killGlobalStr("search")
 End
 
 Function DeletePKGfolder()

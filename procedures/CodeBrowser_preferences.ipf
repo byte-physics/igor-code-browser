@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 105
+static Constant kPrefsVersion = 106
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -19,7 +19,8 @@ Structure CodeBrowserPrefs
 	uint32 panelProcedure	// last marked procedure in panel
 	uint32 panelElement	// last marked element in panel
 	uint32 panelTopElement // top element in listbox (scrolling)
-	uint32 reserved[95]	// Reserved for future use
+	uint32 configCleanOnExit // delete CodeBrowser related data when CodeBrowser exits
+	uint32 reserved[94]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -47,8 +48,10 @@ static Function DefaultPackagePrefsStruct(prefs)
 	prefs.panelElement   = 0
 	prefs.panelTopElement= 0
 
+	prefs.configCleanOnExit = 1
+
 	Variable i
-	for(i=0; i<95; i+=1)
+	for(i=0; i<94; i+=1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -56,7 +59,7 @@ End
 // Fill package prefs structures to match state of panel.
 static Function SyncPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
-	Variable scale, selectedItem
+	Variable scale, selectedItem, configItem
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
 
@@ -85,6 +88,9 @@ static Function SyncPackagePrefsStruct(prefs)
 	
 	selectedItem = getCurrentItemAsNumeric(indexTop = 1)
 	prefs.panelTopElement   = selectedItem < 0 ? 0 : selectedItem
+
+	configItem = getGlobalVar("cleanOnExit")
+	prefs.configCleanOnExit = configItem < 0 ? 1 : configItem
 End
 
 // InitPackagePrefsStruct(prefs)
@@ -125,6 +131,7 @@ Function LoadPackagePrefsFromDisk(prefs)
 	prefs.panelCoords[2] /= scale
 	prefs.panelCoords[3] /= scale
 
+	setGlobalVar("cleanOnExit", prefs.configCleanOnExit)
 End
 
 Function SavePackagePrefsToDisk(prefs)
