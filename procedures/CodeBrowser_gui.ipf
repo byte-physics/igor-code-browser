@@ -37,9 +37,7 @@ Function createPanel()
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
 
-	DoWindow $panel
-	if(V_flag != 0)
-		DebugPrint("Panel Exists")
+	if(existsPanel())
 		DoWindow/F $panel
 		return NaN
 	endif
@@ -125,8 +123,7 @@ Function resizeToPackagePrefs()
 	Variable prefsRight  = prefs.panelCoords[2]
 	Variable prefsBottom = prefs.panelCoords[3]
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		createPanel()
 	endif
 	MoveWindow/W=$panel prefsLeft, prefsTop, prefsRight, prefsBottom
@@ -165,11 +162,9 @@ Function updatePanel()
 	saveReParse()
 	debugPrint("All Procedures were marked for parsing")
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
-	debugPrint("panel exists")
 
 	ControlUpdate/A/W=$panel
 	updateListBoxHook()
@@ -177,10 +172,17 @@ Function updatePanel()
 	return 0
 End
 
-Function markAsUnInitialized()
-
+Function existsPanel()
 	DoWindow $panel
 	if(V_flag == 0)
+		return 0
+	endif
+	debugPrint("panel exists")
+	return 1
+End
+
+Function markAsUnInitialized()
+	if(!existsPanel())
 		return 0
 	endif
 
@@ -189,8 +191,7 @@ End
 
 Function markAsInitialized()
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 
@@ -199,8 +200,7 @@ End
 
 Function isInitialized()
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 

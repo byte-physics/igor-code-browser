@@ -103,8 +103,7 @@ End
 Function FillPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 
-	DoWindow $GetPanel()
-	if(V_flag == 0)
+	if(!existsPanel())
 		// Panel does not exist. Set prefs struct to default.
 		DefaultPackagePrefsStruct(prefs)
 	else

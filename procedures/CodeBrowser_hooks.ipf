@@ -70,8 +70,7 @@ Function preparePanelClose()
 	SetIgorHook/K AfterCompiledHook=updatePanel
 	debugPrint("AfterCompiledHook: " + S_info)
 
-	DoWindow $GetPanel()
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 
