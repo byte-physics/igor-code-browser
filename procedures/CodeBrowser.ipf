@@ -656,6 +656,11 @@ static Function saveResults(procedure)
 	SaveVariablesWave[procedure.row][0] = 1 // mark as valid
 	SaveVariablesWave[procedure.row][1] = getParsingTime() // time in micro seconds
 	SaveVariablesWave[procedure.row][2] = getCheckSumTime() // time in micro seconds
+
+	// if function list could not be acquired don't save the checksum
+	if(!numpnts(declWave) || !cmpstr(declWave[0][1], "Procedures Not Compiled() -> "))
+		SaveStringsWave[procedure.row][1] = "no checksum"
+	endif
 End
 
 static Function saveLoad(procedure)
