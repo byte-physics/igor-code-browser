@@ -86,12 +86,18 @@ Function preparePanelClose()
 	if(prefs.configCleanOnExit)
 		// storage data will not be saved in experiment
 		saveResetStorage()
-		killGlobalStr("search")
 		killGlobalVar("cleanOnExit")
 		killGlobalVar("debuggingEnabled")
-		// clean Package DataFolder
-		DeletePKGfolder()
 	endif
+End
+
+// if panel does not exist, delete panel-bound var/wave/dfr
+Function killPanelRelatedObjects()
+	Wave/T decl = getDeclWave()
+	Wave/I line = getLineWave()
+
+	KillWaves/Z decl, line
+	killGlobalStr("search")
 End
 
 Function panelHook(s)
@@ -109,6 +115,8 @@ Function panelHook(s)
 			break
 		case 2:				// kill
 			preparePanelClose()
+			killPanelRelatedObjects()
+			DeletePKGfolder()
 			hookResult = 1
 			break
 		case 6:				// resize

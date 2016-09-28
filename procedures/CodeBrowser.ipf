@@ -896,13 +896,10 @@ Function searchReset()
 End
 
 Function DeletePKGfolder()
-	Wave/T decl = getDeclWave()
-	Wave/I line = getLineWave()
-
-	KillWaves/Z decl, line
-	KillDataFolder/Z $pkgFolder
-
-	if(!CountObjects("root:Packages", 4))
+	if(CountObjects(pkgFolder, 1) + CountObjects(pkgFolder, 2) + CountObjects(pkgFolder, 3) == 0)
+		KillDataFolder/Z $pkgFolder
+	endif
+	if(CountObjects("root:Packages", 4) == 0)
 		KillDataFolder root:Packages
 	endif
 End
