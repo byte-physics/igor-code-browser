@@ -659,6 +659,7 @@ static Function saveResults(procedure)
 
 	// if function list could not be acquired don't save the checksum
 	if(!numpnts(declWave) || !cmpstr(declWave[0][1], "Procedures Not Compiled() -> "))
+		DebugPrint("Function list is not complete")
 		SaveStringsWave[procedure.row][1] = "no checksum"
 	endif
 End

@@ -187,6 +187,7 @@ Function markAsUnInitialized()
 	endif
 
 	SetWindow $panel, userdata($oneTimeInitUserData)=""
+	debugPrint("panel marked as uninitialized")
 End
 
 Function markAsInitialized()
@@ -196,6 +197,7 @@ Function markAsInitialized()
 	endif
 
 	SetWindow $panel, userdata($oneTimeInitUserData)="1"
+	debugPrint("panel marked as initialized")
 End
 
 Function isInitialized()

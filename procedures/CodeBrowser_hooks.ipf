@@ -11,6 +11,8 @@ static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedur
 
 	string expName
 
+	debugprint("called")
+
 	preparePanelClose()
 	markAsUnInitialized()
 
@@ -48,12 +50,12 @@ Function initializePanel()
 
 	Execute/Z/Q "SetIgorOption IndependentModuleDev=1"
 	if(!(V_flag == 0))
-		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
+		debugPrint("Error: SetIgorOption IndependentModuleDev returned " + num2str(V_flag))
 	endif
 
 	Execute/Z/Q "SetIgorOption recreateListboxHScroll=1"
 	if(!(V_flag == 0))
-		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
+		debugPrint("Error: SetIgorOption recreateListboxHScroll returned " + num2str(V_flag))
 	endif
 
 	SetIgorHook AfterCompiledHook=updatePanel
