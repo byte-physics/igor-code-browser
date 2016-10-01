@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 105
+static Constant kPrefsVersion = 107
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -19,7 +19,9 @@ Structure CodeBrowserPrefs
 	uint32 panelProcedure	// last marked procedure in panel
 	uint32 panelElement	// last marked element in panel
 	uint32 panelTopElement // top element in listbox (scrolling)
-	uint32 reserved[95]	// Reserved for future use
+	uint32 configCleanOnExit // delete CodeBrowser related data when CodeBrowser exits
+	uint32 configDebuggingEnabled // enable messages for debugging purpose
+	uint32 reserved[93]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -42,13 +44,16 @@ static Function DefaultPackagePrefsStruct(prefs)
 
 	prefs.panelCheckboxSort = 1
 
-	prefs.panelNameSpace = 1
-	prefs.panelProcedure = 1
-	prefs.panelElement   = 0
-	prefs.panelTopElement= 0
+	prefs.panelNameSpace  = 1
+	prefs.panelProcedure  = 1
+	prefs.panelElement    = 0
+	prefs.panelTopElement = 0
+
+	prefs.configCleanOnExit = 1
+	prefs.configDebuggingEnabled = 0
 
 	Variable i
-	for(i=0; i<95; i+=1)
+	for(i=0; i<93; i+=1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -56,7 +61,7 @@ End
 // Fill package prefs structures to match state of panel.
 static Function SyncPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
-	Variable scale, selectedItem
+	Variable scale, selectedItem, configItem
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
 
@@ -71,7 +76,7 @@ static Function SyncPackagePrefsStruct(prefs)
 	prefs.panelCoords[1] = V_top * scale
 	prefs.panelCoords[2] = V_right * scale
 	prefs.panelCoords[3] = V_bottom * scale
-	
+
 	prefs.panelCheckboxSort = returnCheckBoxSort()
 
 	selectedItem = getCurrentItemAsNumeric(module = 1)
@@ -79,12 +84,18 @@ static Function SyncPackagePrefsStruct(prefs)
 
 	selectedItem = getCurrentItemAsNumeric(procedure = 1)
 	prefs.panelProcedure = selectedItem < 0 ? 1 : selectedItem
-	
+
 	selectedItem = getCurrentItemAsNumeric(index = 1)
 	prefs.panelElement   = selectedItem < 0 ? 0 : selectedItem
-	
+
 	selectedItem = getCurrentItemAsNumeric(indexTop = 1)
 	prefs.panelTopElement   = selectedItem < 0 ? 0 : selectedItem
+
+	configItem = getGlobalVar("cleanOnExit")
+	prefs.configCleanOnExit = configItem < 0 ? 1 : configItem
+
+	configItem = getGlobalVar("debuggingEnabled")
+	prefs.configDebuggingEnabled = configItem < 0 ? 0 : configItem
 End
 
 // InitPackagePrefsStruct(prefs)
@@ -92,8 +103,7 @@ End
 Function FillPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 
-	DoWindow $GetPanel()
-	if (V_flag == 0)
+	if(!existsPanel())
 		// Panel does not exist. Set prefs struct to default.
 		DefaultPackagePrefsStruct(prefs)
 	else
@@ -109,7 +119,7 @@ Function LoadPackagePrefsFromDisk(prefs)
 	LoadPackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 
 	// If error or prefs not found or not valid, initialize them.
-	if (V_flag!=0 || V_bytesRead==0 || prefs.version!=kPrefsVersion)
+	if(V_flag != 0 || V_bytesRead == 0 || prefs.version != kPrefsVersion)
 		FillPackagePrefsStruct(prefs)	// Set based on panel if it exists or set to default values.
 		SavePackagePrefsToDisk(prefs)	// Create initial prefs record.
 	endif
@@ -125,6 +135,8 @@ Function LoadPackagePrefsFromDisk(prefs)
 	prefs.panelCoords[2] /= scale
 	prefs.panelCoords[3] /= scale
 
+	setGlobalVar("cleanOnExit", prefs.configCleanOnExit)
+	setGlobalVar("debuggingEnabled", prefs.configDebuggingEnabled)
 End
 
 Function SavePackagePrefsToDisk(prefs)

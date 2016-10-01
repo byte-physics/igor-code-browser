@@ -37,9 +37,7 @@ Function createPanel()
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
 
-	DoWindow $panel
-	if(V_flag != 0)
-		DebugPrint("Panel Exists")
+	if(existsPanel())
 		DoWindow/F $panel
 		return NaN
 	endif
@@ -70,7 +68,7 @@ Function createPanel()
 	DefineGuide/W=$panel UGH1={FB,panelBorder}
 	DefineGuide/W=$panel UGHL={FL,panelBorder}
 	DefineGuide/W=$panel UGHR={FR,panelBorder}
-	
+
 	ListBox $listCtrl, win=$panel,pos={panelBorder,panelTopHeight + panelBorder}, size={panelWidth-2*panelBorder, panelHeight-panelTopHeight-2*panelBorder}
 	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
 	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
@@ -90,7 +88,7 @@ Function createPanel()
 	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
 	setGlobalStr("search", "")
-	
+
 	SetVariable $searchCtrl, pos={panelBorder + 118, SortCtrlTop - 2}, size={175.00, 18.00}, proc=$(module + "#searchSet"),title = "search"
 	SetVariable $searchCtrl, limits={-inf,inf,0}, value=$(pkgFolder + ":search"), live = 1
 
@@ -125,8 +123,7 @@ Function resizeToPackagePrefs()
 	Variable prefsRight  = prefs.panelCoords[2]
 	Variable prefsBottom = prefs.panelCoords[3]
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		createPanel()
 	endif
 	MoveWindow/W=$panel prefsLeft, prefsTop, prefsRight, prefsBottom
@@ -165,11 +162,9 @@ Function updatePanel()
 	saveReParse()
 	debugPrint("All Procedures were marked for parsing")
 
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
-	debugPrint("panel exists")
 
 	ControlUpdate/A/W=$panel
 	updateListBoxHook()
@@ -177,34 +172,39 @@ Function updatePanel()
 	return 0
 End
 
-Function markAsUnInitialized()
-
+Function existsPanel()
 	DoWindow $panel
 	if(V_flag == 0)
 		return 0
 	endif
+	debugPrint("panel exists")
+	return 1
+End
 
-	SetWindow $panel, userdata($oneTimeInitUserData)=""
+Function markAsUnInitialized()
+	if(!existsPanel())
+		return 0
+	endif
+
+	setGlobalVar("initialized", 0)
+	debugPrint("panel marked as uninitialized")
 End
 
 Function markAsInitialized()
-
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 
-	SetWindow $panel, userdata($oneTimeInitUserData)="1"
+	setGlobalVar("initialized", 1)
+	debugPrint("panel marked as initialized")
 End
 
 Function isInitialized()
-
-	DoWindow $panel
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 
-	return cmpstr(GetUserData(panel,"",oneTimeInitUserData),"1") == 0
+	return getGlobalVar("initialized") == 1
 End
 
 // Returns the currently selected item from the panel defined by the optional arguments.
@@ -294,7 +294,7 @@ Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
 	endif
 
 	if(V_Value >= 0)
-		if (indexTop)
+		if(indexTop)
 			return V_startRow
 		endif
 		return V_Value
@@ -342,13 +342,13 @@ End
 Function popupModules(pa) : PopupMenuControl
 	STRUCT WMPopupAction &pa
 
-	switch( pa.eventCode )
+	switch(pa.eventCode)
 		case 2: // mouse up
 			debugprint("mouse up")
 
 			string module = pa.popStr
 
-			if( isEmpty(module) )
+			if(isEmpty(module))
 				break
 			endif
 
@@ -366,13 +366,13 @@ End
 Function popupProcedures(pa) : PopupMenuControl
 	STRUCT WMPopupAction &pa
 
-	switch( pa.eventCode )
+	switch(pa.eventCode)
 		case 2: // mouse up
 			debugprint("mouse up")
 
 			string procedure = pa.popStr
 
-			if( isEmpty(procedure) )
+			if(isEmpty(procedure))
 				break
 			endif
 
@@ -388,7 +388,7 @@ End
 Function checkboxSort(cba) : CheckBoxControl
 	STRUCT WMCheckboxAction &cba
 
-	switch( cba.eventCode )
+	switch(cba.eventCode)
 		case 2: // mouse up
 			updateListBoxHook()
 			break
@@ -400,9 +400,9 @@ Function checkboxSort(cba) : CheckBoxControl
 End
 
 // returns 0 if checkbox is deselected or 1 if it is selected.
-Function returnCheckBoxSort()	
+Function returnCheckBoxSort()
 	ControlInfo/W=$panel $sortCtrl
-	if (V_flag == 2)		// Checkbox found?
+	if(V_flag == 2)		// Checkbox found?
 		return V_Value
 	else
 		//Fallback: Sorting as default behaviour
@@ -439,7 +439,7 @@ Function listBoxProc(lba) : ListBoxControl
 	WAVE/Z selWave = lba.selWave
 	string procedure
 
-	switch( lba.eventCode )
+	switch(lba.eventCode)
 		case -1: // control being killed
 			break
 		case 1: // mouse down

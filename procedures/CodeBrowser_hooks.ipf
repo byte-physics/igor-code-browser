@@ -11,6 +11,8 @@ static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedur
 
 	string expName
 
+	debugprint("called")
+
 	preparePanelClose()
 	markAsUnInitialized()
 
@@ -47,13 +49,13 @@ Function initializePanel()
 	debugprint("called")
 
 	Execute/Z/Q "SetIgorOption IndependentModuleDev=1"
-	if (!(V_flag == 0))
-		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
+	if(!(V_flag == 0))
+		debugPrint("Error: SetIgorOption IndependentModuleDev returned " + num2str(V_flag))
 	endif
-	
+
 	Execute/Z/Q "SetIgorOption recreateListboxHScroll=1"
-	if (!(V_flag == 0))
-		debugPrint("Error: SetIgorOption returned " + num2str(V_flag))
+	if(!(V_flag == 0))
+		debugPrint("Error: SetIgorOption recreateListboxHScroll returned " + num2str(V_flag))
 	endif
 
 	SetIgorHook AfterCompiledHook=updatePanel
@@ -61,7 +63,7 @@ Function initializePanel()
 
 	updatePanel()
 
-	setGlobalStr("search","")
+	setGlobalStr("search", "")
 End
 
 // Prepare for panel closing, must be called before the panel is killed or the experiment closed
@@ -70,11 +72,7 @@ Function preparePanelClose()
 	SetIgorHook/K AfterCompiledHook=updatePanel
 	debugPrint("AfterCompiledHook: " + S_info)
 
-	// storage data should not be saved in experiment
-	saveResetStorage()
-
-	DoWindow $GetPanel()
-	if(V_flag == 0)
+	if(!existsPanel())
 		return 0
 	endif
 
@@ -82,9 +80,27 @@ Function preparePanelClose()
 	STRUCT CodeBrowserPrefs prefs
 	FillPackagePrefsStruct(prefs)
 	SavePackagePrefsToDisk(prefs)
-	
+
 	// reset global gui variables
 	searchReset()
+
+	// delete CodeBrowser related data
+	if(prefs.configCleanOnExit)
+		// storage data will not be saved in experiment
+		saveResetStorage()
+		killGlobalVar("cleanOnExit")
+		killGlobalVar("debuggingEnabled")
+	endif
+End
+
+// if panel does not exist, delete panel-bound var/wave/dfr
+Function killPanelRelatedObjects()
+	Wave/T decl = getDeclWave()
+	Wave/I line = getLineWave()
+
+	KillWaves/Z decl, line
+	killGlobalStr("search")
+	killGlobalVar("initialized")
 End
 
 Function panelHook(s)
@@ -102,6 +118,8 @@ Function panelHook(s)
 			break
 		case 2:				// kill
 			preparePanelClose()
+			killPanelRelatedObjects()
+			DeletePKGfolder()
 			hookResult = 1
 			break
 		case 6:				// resize
