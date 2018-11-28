@@ -166,18 +166,18 @@ End
 Function setGlobalVar(globalVar, numValue)
 	Variable numValue
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
 
+	DFREF dfr = createDFWithAllParents(pkgFolder)
 	Variable/G dfr:$globalVar
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!NVAR_Exists(myVar))
-		DebugPrint("global Variable " + globalVar + " failed to create")
+		DebugPrint("failed to create global variable " + globalVar)
 		return 0
-	else
-		myVar = numValue
-		return 1
 	endif
+
+	myVar = numValue
+
+	return 1
 End
 
 // returns the Value of a (positive) numeric global Variable. Returns -1 if Variable does not exist.
@@ -203,60 +203,84 @@ End
 // set a global string variable
 Function setGlobalStr(globalVar, strValue)
 	String globalVar, strValue
-	DFREF dfr = createDFWithAllParents(pkgFolder)
 
+	DFREF dfr = createDFWithAllParents(pkgFolder)
 	String/G dfr:$globalVar
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!SVAR_Exists(myVar))
-		DebugPrint("global String " + globalVar + " failed to create")
+		DebugPrint("failed to create global string " + globalVar)
 		return 0
-	else
-		myVar = strValue
-		return 1
 	endif
+
+	myVar = strValue
+
+	return 1
 End
 
 // returns the Value of a global String. Returns NullString on Error.
 Function/S getGlobalStr(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist")
+		return ""
+	endif
 
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!SVAR_Exists(myVar))
+		DebugPrint("global String does not exist")
 		return ""
-	else
-		return myVar
 	endif
+
+	return myVar
 End
 
+// @returns 1 if global string is not present
 Function killGlobalStr(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		return 1
+	endif
+
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
-	KillStrings/Z dfr:$globalVar
-
 	if(!SVAR_Exists(myVar))
 		return 1
-	else
+	endif
+
+	KillStrings/Z dfr:$globalVar
+	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(SVAR_Exists(myVar))
+		DebugPrint("Could not delete global String " + globalVar)
 		return 0
 	endif
+
+	return 1
 End
 
 Function killGlobalVar(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		return 1
+	endif
+
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
-	KillVariables/Z dfr:$globalVar
-
 	if(!NVAR_Exists(myVar))
 		return 1
-	else
+	endif
+
+	KillVariables/Z dfr:$globalVar
+	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(NVAR_Exists(myVar))
+		DebugPrint("Could not delete global Variable " + globalVar)
 		return 0
 	endif
+
+	return 1
 End
 
 // extended function of WM's startMSTimer
