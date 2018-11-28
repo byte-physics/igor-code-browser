@@ -181,17 +181,23 @@ Function setGlobalVar(globalVar, numValue)
 End
 
 // returns the Value of a (positive) numeric global Variable. Returns -1 if Variable does not exist.
+//
+// note: do not use `DebugPrint()` here, as it will cause recursion
+//
 Function getGlobalVar(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		return -1
+	endif
 
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!NVAR_Exists(myVar))
 		return -1
-	else
-		return myVar
 	endif
+
+	return myVar
 End
 
 // set a global string variable
@@ -297,4 +303,29 @@ Function isCompiled([funcList])
 		return 0
 	endif
 	return 1
+End
+
+/// Checks if the datafolder referenced by dfr exists.
+/// Unlike DataFolderExists() a dfref pointing to an empty ("") dataFolder is considered non-existing here.
+///
+/// https://www.wavemetrics.com/code-snippet/datafolderexists-data-folder-references
+///
+/// @returns one if dfr is valid and references an existing datafolder, zero otherwise
+Function DataFolderExistsDFR(dfr)
+	dfref dfr
+
+	string dataFolder
+
+	switch(DataFolderRefStatus(dfr))
+		case 0: // invalid ref, does not exist
+			return 0
+		case 1: // might be valid
+			dataFolder = GetDataFolder(1,dfr)
+			return cmpstr(dataFolder,"") != 0 && DataFolderExists(dataFolder)
+		case 3: // free data folders always exist
+			return 1
+		default:
+			Abort "unknown status"
+			return 0
+	endswitch
 End
