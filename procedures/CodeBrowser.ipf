@@ -765,12 +765,14 @@ Function saveReParse()
 	savedVariables[][0] = 0
 End
 
-Function saveResetStorage()
+// Kill all storage objects
+//
+// note: if objects are in use they can not be killed.
+// 		 therefore the function resets all variables before killing
+Function KillStorage()
 	Wave savedVariablesWave = getSaveVariables()
 	Wave/T SavedStringsWave = getSaveStrings()
 	Wave/WAVE SavedWavesWave = getSaveWaves()
-
-	// if objects are in use they can not be killed. reset before killing
 
 	// reset
 	saveReParse()
@@ -890,10 +892,6 @@ Function searchAndDelete(decls, lines, searchString)
 			DeletePoints/M=0 i, 1, decls, lines
 		endif
 	endif
-End
-
-Function searchReset()
-	setGlobalStr("search","")
 End
 
 Function DeletePKGfolder()
