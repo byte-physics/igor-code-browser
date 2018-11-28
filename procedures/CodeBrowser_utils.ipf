@@ -83,10 +83,19 @@ Function GetScreenDimensions(rect)
 End
 
 // Outputs a debug message prefixed with the calling function of debugPrint
-Function debugPrint(msg)
+//
+// @param loglevel   debug level
+//                   0: No Error
+//                   1: Error
+//                   2: Warning
+//                   3: Info
+Function debugPrint(msg, [loglevel])
 	string msg
+	variable loglevel
 
-	if(getGlobalVar("debuggingEnabled") == 1)
+	loglevel = ParamisDefault(loglevel) ? 1 : loglevel
+
+	if(getGlobalVar("debuggingEnabled") >= loglevel)
 		printf "%s(...): %s\r", GetRTStackInfo(2), RemoveEnding(msg,"\r")
 	endif
 End
@@ -242,11 +251,13 @@ Function killGlobalStr(globalVar)
 
 	DFREF dfr = $pkgFolder
 	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist", loglevel=3)
 		return 1
 	endif
 
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 	if(!SVAR_Exists(myVar))
+		DebugPrint("Global String does not exist: " + globalVar, loglevel=3)
 		return 1
 	endif
 
@@ -265,11 +276,13 @@ Function killGlobalVar(globalVar)
 
 	DFREF dfr = $pkgFolder
 	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist", loglevel=3)
 		return 1
 	endif
 
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
 	if(!NVAR_Exists(myVar))
+		DebugPrint("Global Variable does not exist: " + globalVar, loglevel=3)
 		return 1
 	endif
 
