@@ -11,7 +11,8 @@ static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedur
 
 	string expName
 
-	debugprint("called")
+	debugPrint("called")
+	debugPrint("unsavedExp: " + num2str(unsavedExp))
 
 	BeforePanelClose()
 	DoWindow/K CodeBrowser

@@ -175,6 +175,7 @@ End
 Function existsPanel()
 	DoWindow $panel
 	if(V_flag == 0)
+		debugPrint("panel does not exist")
 		return 0
 	endif
 	debugPrint("panel exists")
