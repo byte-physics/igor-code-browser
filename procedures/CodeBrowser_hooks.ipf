@@ -11,17 +11,18 @@ static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedur
 
 	string expName
 
-	debugprint("called")
+	debugPrint("called")
+	debugPrint("unsavedExp: " + num2str(unsavedExp))
 
-	preparePanelClose()
-	markAsUnInitialized()
+	BeforePanelClose()
+	DoWindow/K CodeBrowser
+	AfterPanelClose()
 
 	if(unsavedExp || unsavedNotebooks || unsavedProcedures)
 		return 0
 	endif
 
 	expName = IgorInfo(1)
-
 	if(!cmpstr(expName, "Untitled"))
 		return 0
 	endif
@@ -40,7 +41,9 @@ End
 static Function IgorBeforeNewHook(igorApplicationNameStr)
 	string igorApplicationNameStr
 
-	preparePanelClose()
+	debugPrint("called")
+	BeforePanelClose()
+
 	return 0
 End
 
@@ -66,38 +69,52 @@ Function initializePanel()
 	setGlobalStr("search", "")
 End
 
-// Prepare for panel closing, must be called before the panel is killed or the experiment closed
-Function preparePanelClose()
-
+// Prepare for panel closing.
+//
+// note: Must be called before the panel is killed or the experiment is closed.
+Function BeforePanelClose()
 	SetIgorHook/K AfterCompiledHook=updatePanel
-	debugPrint("AfterCompiledHook: " + S_info)
+	if(strlen(S_info) > 0)
+		debugPrint("registered hooks with hookType=AfterCompiledHook: " + S_info)
+	else
+		debugPrint("all hookType=AfterCompiledHook deleted")
+	endif
+End
+
+// Clean up after closing panel
+//
+// note: Must be called after the panel was closed
+Function AfterPanelClose()
+	variable cleanOnExit
 
 	if(!existsPanel())
 		return 0
 	endif
 
-	// save panel coordinates to disk
-	STRUCT CodeBrowserPrefs prefs
-	FillPackagePrefsStruct(prefs)
-	SavePackagePrefsToDisk(prefs)
-
-	// reset global gui variables
-	searchReset()
-
-	// delete CodeBrowser related data
-	if(prefs.configCleanOnExit)
-		// storage data will not be saved in experiment
-		saveResetStorage()
-		killGlobalVar("cleanOnExit")
-		killGlobalVar("debuggingEnabled")
+	cleanOnExit = !!getGlobalVar("cleanOnExit")
+	QuitPackagePrefs()
+	if(cleanOnExit)
+		KillStorage()
+		KillPanelObjects()
+		DeletePKGfolder()
 	endif
 End
 
-// if panel does not exist, delete panel-bound var/wave/dfr
-Function killPanelRelatedObjects()
+// Kill panel-bound variables and waves
+//
+// @see KillStorage
+//
+// note: if the waves and variables are still bound to a panel, this function
+//       will only reset them.
+Function KillPanelObjects()
 	Wave/T decl = getDeclWave()
 	Wave/I line = getLineWave()
 
+	// reset
+	setGlobalStr("search","")
+	setGlobalVar("initialized", 0)
+
+	// kill
 	KillWaves/Z decl, line
 	killGlobalStr("search")
 	killGlobalVar("initialized")
@@ -117,9 +134,8 @@ Function panelHook(s)
 			markAsInitialized()
 			break
 		case 2:				// kill
-			preparePanelClose()
-			killPanelRelatedObjects()
-			DeletePKGfolder()
+			BeforePanelClose()
+			AfterPanelClose()
 			hookResult = 1
 			break
 		case 6:				// resize

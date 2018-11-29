@@ -145,8 +145,23 @@ Function SavePackagePrefsToDisk(prefs)
 	SavePackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 End
 
+// Sync all package preferences to disk and kill global variables that were
+// used.
+Function QuitPackagePrefs()
+	// sync
+	STRUCT CodeBrowserPrefs prefs
+	FillPackagePrefsStruct(prefs)
+	SavePackagePrefsToDisk(prefs)
+
+	// kill
+	if(!!prefs.configCleanOnExit)
+		killGlobalVar("cleanOnExit")
+		killGlobalVar("debuggingEnabled")
+	endif
+End
+
 // Used to test SavePackagePreferences /KILL flag added in Igor Pro 6.10B04.
-Function KillPackagePrefs()
+Function ResetPackagePrefs()
 	STRUCT CodeBrowserPrefs prefs
 	SavePackagePreferences /KILL kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 End
