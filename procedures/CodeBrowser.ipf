@@ -47,8 +47,6 @@ static Constant CsaveMaximum = 1024
 
 Constant    openKey           = 46 // ".", the dot
 
-// List of available macro subtypes
-StrConstant subTypeList       = "Graph;GraphStyle;GraphMarquee;Table;TableStyle;Layout;LayoutStyle;LayoutMarquee;ListBoxControl;Panel;ButtonControl;CheckBoxControl;PopupMenuControl;SetVariableControl"
 // List of igor7 structure elements.
 static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
 // Loosely based on the WM procedure from the documentation
