@@ -12,13 +12,13 @@ Menu "CodeBrowser"
 End
 
 // Markers for the different listbox elements
-StrConstant strConstantMarker	= "\\W539"
-StrConstant constantMarker		= "\\W534"
-StrConstant functionMarker		= "\\W529"
-StrConstant macroMarker			= "\\W519"
-StrConstant windowMarker			= "\\W520"
-StrConstant procMarker			= "\\W521"
-StrConstant structureMarker		= "\\W522"
+StrConstant strConstantMarker = "\\W539"
+StrConstant constantMarker    = "\\W534"
+StrConstant functionMarker    = "\\W529"
+StrConstant macroMarker       = "\\W519"
+StrConstant windowMarker      = "\\W520"
+StrConstant procMarker        = "\\W521"
+StrConstant structureMarker   = "\\W522"
 
 // the idea here: static functions have less intense colors
 StrConstant plainColor     = "0,0,0"             // black
@@ -322,7 +322,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 End
 
 // Adds Constants/StrConstants by searching for them in the Procedure with a Regular Expression
-Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWave)
+Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWave)
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
@@ -364,7 +364,7 @@ Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWa
 	KillWaves/Z W_Index
 End
 
-Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
+Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
@@ -406,7 +406,7 @@ Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
 	endfor
 End
 
-Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWave, [parseVariables])
+Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWave, [parseVariables])
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
