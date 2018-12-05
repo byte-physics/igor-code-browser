@@ -369,7 +369,7 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 	WAVE/T declWave
 	WAVE/D lineWave
 
-	Variable numLines, i, idx, numEntries, numMatches
+	Variable numLines, idx, numEntries, numMatches
 	String procText, re, def, name, arguments, type
 
 	// get procedure code
@@ -415,7 +415,7 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 		parseVariables = 1 // added for debugging
 	endif
 
-	variable numLines, i, idx, numEntries, numMatches
+	variable numLines, idx, numEntries, numMatches
 	string procText, reStart, reEnd, name, StaticKeyword
 
 	// get procedure code
