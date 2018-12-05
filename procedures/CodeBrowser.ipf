@@ -12,13 +12,13 @@ Menu "CodeBrowser"
 End
 
 // Markers for the different listbox elements
-StrConstant strConstantMarker	= "\\W539"
-StrConstant constantMarker		= "\\W534"
-StrConstant functionMarker		= "\\W529"
-StrConstant macroMarker			= "\\W519"
-StrConstant windowMarker			= "\\W520"
-StrConstant procMarker			= "\\W521"
-StrConstant structureMarker		= "\\W522"
+StrConstant strConstantMarker = "\\W539"
+StrConstant constantMarker    = "\\W534"
+StrConstant functionMarker    = "\\W529"
+StrConstant macroMarker       = "\\W519"
+StrConstant windowMarker      = "\\W520"
+StrConstant procMarker        = "\\W521"
+StrConstant structureMarker   = "\\W522"
 
 // the idea here: static functions have less intense colors
 StrConstant plainColor     = "0,0,0"             // black
@@ -47,8 +47,6 @@ static Constant CsaveMaximum = 1024
 
 Constant    openKey           = 46 // ".", the dot
 
-// List of available macro subtypes
-StrConstant subTypeList       = "Graph;GraphStyle;GraphMarquee;Table;TableStyle;Layout;LayoutStyle;LayoutMarquee;ListBoxControl;Panel;ButtonControl;CheckBoxControl;PopupMenuControl;SetVariableControl"
 // List of igor7 structure elements.
 static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
 // Loosely based on the WM procedure from the documentation
@@ -322,7 +320,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 End
 
 // Adds Constants/StrConstants by searching for them in the Procedure with a Regular Expression
-Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWave)
+Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWave)
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
@@ -364,12 +362,12 @@ Function addDecoratedConstants(module, procedureWithoutModule,  declWave, lineWa
 	KillWaves/Z W_Index
 End
 
-Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
+Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
 
-	Variable numLines, i, idx, numEntries, numMatches
+	Variable numLines, idx, numEntries, numMatches
 	String procText, re, def, name, arguments, type
 
 	// get procedure code
@@ -406,7 +404,7 @@ Function addDecoratedMacros(module, procedureWithoutModule,  declWave, lineWave)
 	endfor
 End
 
-Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWave, [parseVariables])
+Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWave, [parseVariables])
 	String module, procedureWithoutModule
 	WAVE/T declWave
 	WAVE/D lineWave
@@ -415,7 +413,7 @@ Function addDecoratedStructure(module, procedureWithoutModule,  declWave, lineWa
 		parseVariables = 1 // added for debugging
 	endif
 
-	variable numLines, i, idx, numEntries, numMatches
+	variable numLines, idx, numEntries, numMatches
 	string procText, reStart, reEnd, name, StaticKeyword
 
 	// get procedure code
