@@ -19,6 +19,7 @@ StrConstant macroMarker       = "\\W519"
 StrConstant windowMarker      = "\\W520"
 StrConstant procMarker        = "\\W521"
 StrConstant structureMarker   = "\\W522"
+StrConstant menuMarker        = "\\W523"
 
 // the idea here: static functions have less intense colors
 StrConstant plainColor     = "0,0,0"             // black
@@ -239,6 +240,9 @@ Function/S createMarkerForType(type)
 		marker = constantMarker
 	elseif(strsearch(type, "structure", 0) != -1)
 		marker = structureMarker
+	elseif(strsearch(type, "menu", 0) != -1)
+		marker = menuMarker
+		return getColorDef(plainColor) + marker
 	endif
 
 	// plain definitions
@@ -477,6 +481,56 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 	WaveClear wavStructureStart, wavStructureEnd
 End
 
+Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
+	String module, procedureWithoutModule
+	WAVE/T declWave
+	WAVE/D lineWave
+
+	Variable numLines, idx, numEntries, numMatches
+	String procText, re, def, name, type
+	String currentMenu = ""
+
+	// get procedure code
+	procText = getProcedureText(module, procedureWithoutModule)
+	numLines = ItemsInList(procText, "\r")
+
+	// search code and return wavLineNumber
+	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
+	// regexp: match case insensitive (?i) spaces don't matter. search for menu or submenu with a name in double quotes.
+	// help for regex on https://regex101.com/
+	re = "^(?i)[[:space:]]*(menu|submenu)[[:space:]]+\"((?:[^\"\\\\]|\\\\.)+)\"(?:[[:space:]]*[,][[:space:]]*(hideable|dynamic|contextualmenu))?"
+	Grep/Q/INDX/E=re text
+	numMatches = !!V_Value
+	Wave W_Index
+	Duplicate/FREE W_Index wavLineNumber
+	KillWaves/Z W_Index
+	if(!numMatches)
+		return 0
+	endif
+
+	numMatches = DimSize(wavLineNumber, 0)
+	numEntries = DimSize(declWave, 0)
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+
+	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
+		SplitString/E=re text[wavLineNumber[(idx - numEntries)]], def, name, type
+		def = LowerStr(def)
+		if(!cmpstr(def, "menu"))
+			currentMenu = name
+		endif
+		declWave[idx][0] = createMarkerForType(def)
+		declWave[idx][1] = "Menu " + currentMenu
+		if(!cmpstr(def, "submenu"))
+			declWave[idx][1] += ":" + name
+		endif
+		if(cmpstr(type, ""))
+			declWave[idx][1] += "(" + type + ")"
+		endif
+
+		lineWave[idx] = wavLineNumber[(idx - numEntries)]
+	endfor
+End
+
 // input wave (wavStructure) contains text of Structure lineseparated.
 // wavStructure begins with "Structure" definition in first line and ends with "EndStructure" in last line.
 Function/S getStructureElements(wavStructure)
@@ -612,6 +666,7 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 	addDecoratedConstants(procedure.module, procedure.name, decls, lines)
 	addDecoratedMacros(procedure.module, procedure.name, decls, lines)
 	addDecoratedStructure(procedure.module, procedure.name, decls, lines)
+	addDecoratedMenu(procedure.module, procedure.name, decls, lines)
 
 	// stop timer
 	setParsingTime(timerStop(timer))
