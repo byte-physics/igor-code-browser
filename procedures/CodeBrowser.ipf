@@ -301,6 +301,9 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
 		func = StringFromList(idx, funcList)
 		fi = FunctionInfo(module + "#" + func, procedure)
+		if(!cmpstr(func, "Procedures Not Compiled"))
+			fi = ReplaceNumberByKey("PROCLINE", fi, 0)
+		endif
 		if(isEmpty(fi))
 			debugPrint("macro or other error for " + module + "#" + func)
 		endif
