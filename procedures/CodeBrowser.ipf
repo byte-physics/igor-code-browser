@@ -664,10 +664,19 @@ static Function saveResults(procedure)
 	endif
 End
 
+// Load the specified procedure from storage waves
+//
+// return errorCode
+//         1 Load successfull
+//         0 save state loaded with zero elements
+//        -1 Could not load save state
+//        -2 CheckSum missmatch. CheckSum has been calculated and was stored in
+//           global variable
 static Function saveLoad(procedure)
 	STRUCT procedure &procedure
 
 	Variable numResults
+	string CheckSum
 
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
@@ -676,46 +685,47 @@ static Function saveLoad(procedure)
 	Wave/T    SaveStringsWave   = getSaveStrings()
 	Wave      SaveVariablesWave	= getSaveVariables()
 
+	// if maximum storage capacity was reached (procedure.row == -1) or
+	// Element not found (procedure.row == endofWave) --> nothing loadable
 	if((procedure.row < 0) || (procedure.row == Dimsize(SaveStringsWave, 0)) || (Dimsize(SaveStringsWave, 0) == 0))
-		// if maximum storage capacity was reached (procedure.row == -1) or Element not found (procedure.row == endofWave) there is nothing to load.
 		debugPrint("save state not found")
 		return -1
-	elseif(isCompiled() && !SaveVariablesWave[procedure.row][0])
-		// procedure marked as non valid by AfterRecompileHook
-		// checksum needs to be compared.
+	endif
+	if(isCompiled() && !SaveVariablesWave[procedure.row][0])
+		// procedure marked as not valid by
+		// AfterCompiledHook --> updatePanel --> saveReParse
+		// --> CheckSum needs to be compared.
 
-		// getting checksum
-		if(setChecksum(procedure) != 1)
-			debugPrint("error creating variable")
+		if(!setChecksum(procedure))
+			debugPrint("error creating CheckSum")
 			return -1
 		endif
-		// comparing checksum
-		if(cmpstr(SaveStringsWave[procedure.row][1],getChecksum()) != 0)
-			// checksum changed. return -2 to indicate that calculation was already done by setChecksum.
-			debugPrint("Checksum missmatch: Procedure has to be reloaded.")
+		CheckSum = getCheckSum()
+		if(!!cmpstr(SaveStringsWave[procedure.row][1], CheckSum))
+			debugPrint("CheckSum missmatch: Procedure has to be reloaded.")
 			return -2
-		else
-			//mark as valid
-			debugPrint("Checksum match: Procedure marked valid.")
-			SaveVariablesWave[procedure.row][0] = 1
 		endif
+		debugPrint("CheckSum match: " + CheckSum)
+
+		SaveVariablesWave[procedure.row][0] = 1
+		debugPrint("Procedure " + procedure.fullname + " marked as valid.")
 	endif
 
-	// load results from free waves
 	numResults = Dimsize(SaveWavesWave[procedure.row][0], 0)
 	Redimension/N=(numResults, -1) declWave, lineWave
-	if(numResults > 0)
-		WAVE/T load0 = SaveWavesWave[procedure.row][0]
-		WAVE/I load1 = SaveWavesWave[procedure.row][1]
-		declWave[][0] = load0[p][0]
-		declWave[][1] = load0[p][1]
-		lineWave[] = load1[p]
-		debugPrint("save state loaded successfully")
-		return 1
-	else
+	if(numResults == 0)
 		debugPrint("no elements in save state")
 		return 0
 	endif
+
+	WAVE/T load0 = SaveWavesWave[procedure.row][0]
+	WAVE/I load1 = SaveWavesWave[procedure.row][1]
+	declWave[][0] = load0[p][0]
+	declWave[][1] = load0[p][1]
+	lineWave[] = load1[p]
+
+	debugPrint("save state loaded successfully")
+	return 1
 End
 
 //	Identifier = module#procedure
@@ -723,25 +733,24 @@ static Function getSaveRow(Identifier)
 	String Identifier
 
 	Wave/T SaveStrings = getSaveStrings()
-	Variable found, endOfWave
+	Variable found, endOfWave, element
 
 	FindValue/TEXT=Identifier/TXOP=4/Z SaveStrings
-	if(V_value == -1)
-		// element not found
+	if(V_Value == -1)
+		debugPrint("Element not found")
 		return Dimsize(SaveStrings, 0)
-	else
-		// element found at position V_value
-
-		// check for inconsistency.
-		if(V_value > CsaveMaximum )
-			DebugPrint("Storage capacity exceeded")
-			// should only happen if(CsaveMaximum) was touched on runtime.
-			// Redimension/Deletion of Wave could be possible.
-			return (CsaveMaximum - 1)
-		endif
-
-		return V_value
 	endif
+	element = V_Value
+
+	// check for inconsistency.
+	if(element > CsaveMaximum )
+		debugPrint("Storage capacity exceeded")
+		// should only happen if(CsaveMaximum) was touched on runtime.
+		// Redimension/Deletion of Wave could be possible.
+		return (CsaveMaximum - 1)
+	endif
+
+	return element
 End
 
 // drop first item at position 0. push all elements upward by 1 element. Free last Position.
@@ -1060,6 +1069,8 @@ End
 
 static Function setParsingTime(numTime)
 	Variable numTime
+
+	debugPrint("parsing time:" + num2str(numTime))
 	return setGlobalVar("parsingTime", numTime)
 End
 
