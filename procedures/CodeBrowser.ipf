@@ -592,12 +592,14 @@ End
 // Parses all procedure windows and write into the decl and line waves
 Function/S parseProcedure(procedure, [checksumIsCalculated])
 	STRUCT procedure &procedure
-	Variable checksumIsCalculated
+	Variable checkSumIsCalculated
 
 	if(ParamIsDefault(checksumIsCalculated))
-		checksumIsCalculated = 0
+		checkSumIsCalculated = 0
 	endif
-	DebugPrint("Checksum recalc:" + num2str(checksumIsCalculated))
+	if(!checkSumIsCalculated)
+		DebugPrint("CheckSum needs to be calculated")
+	endif
 
 	// start timer
 	Variable timer = timerStart()
