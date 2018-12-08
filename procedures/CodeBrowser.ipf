@@ -678,7 +678,7 @@ static Function saveLoad(procedure)
 		// if maximum storage capacity was reached (procedure.row == -1) or Element not found (procedure.row == endofWave) there is nothing to load.
 		debugPrint("save state not found")
 		return -1
-	elseif(SaveVariablesWave[procedure.row][0] == 0)
+	elseif(isCompiled() && !SaveVariablesWave[procedure.row][0])
 		// procedure marked as non valid by AfterRecompileHook
 		// checksum needs to be compared.
 

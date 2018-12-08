@@ -279,3 +279,22 @@ Function timerStop(timerRefNum)
 	microseconds = stopMSTimer(timerRefNum)
 	return microseconds
 End
+
+// check if procedures are in compiled state.
+//
+// @param funcList  [optional] input FunctionList to save time
+//
+// @return 0 if procedure is not compiled, 1 otherwise
+Function isCompiled([funcList])
+	string funcList
+
+	if(ParamIsDefault(funcList))
+		funcList = FunctionList("*", ";", "KIND:18,WIN:Procedure [ProcGlobal]")
+	endif
+
+	if(!cmpstr(funclist, "Procedures Not Compiled;"))
+		debugPrint("procedures are in uncompiled state.")
+		return 0
+	endif
+	return 1
+End
