@@ -83,10 +83,19 @@ Function GetScreenDimensions(rect)
 End
 
 // Outputs a debug message prefixed with the calling function of debugPrint
-Function debugPrint(msg)
+//
+// @param loglevel   debug level
+//                   0: No Error
+//                   1: Error
+//                   2: Warning
+//                   3: Info
+Function debugPrint(msg, [loglevel])
 	string msg
+	variable loglevel
 
-	if(getGlobalVar("debuggingEnabled") == 1)
+	loglevel = ParamisDefault(loglevel) ? 1 : loglevel
+
+	if(getGlobalVar("debuggingEnabled") >= loglevel)
 		printf "%s(...): %s\r", GetRTStackInfo(2), RemoveEnding(msg,"\r")
 	endif
 End
@@ -166,91 +175,125 @@ End
 Function setGlobalVar(globalVar, numValue)
 	Variable numValue
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
 
+	DFREF dfr = createDFWithAllParents(pkgFolder)
 	Variable/G dfr:$globalVar
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!NVAR_Exists(myVar))
-		DebugPrint("global Variable " + globalVar + " failed to create")
+		DebugPrint("failed to create global variable " + globalVar)
 		return 0
-	else
-		myVar = numValue
-		return 1
 	endif
+
+	myVar = numValue
+
+	return 1
 End
 
 // returns the Value of a (positive) numeric global Variable. Returns -1 if Variable does not exist.
+//
+// note: do not use `DebugPrint()` here, as it will cause recursion
+//
 Function getGlobalVar(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		return -1
+	endif
 
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!NVAR_Exists(myVar))
 		return -1
-	else
-		return myVar
 	endif
+
+	return myVar
 End
 
 // set a global string variable
 Function setGlobalStr(globalVar, strValue)
 	String globalVar, strValue
-	DFREF dfr = createDFWithAllParents(pkgFolder)
 
+	DFREF dfr = createDFWithAllParents(pkgFolder)
 	String/G dfr:$globalVar
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!SVAR_Exists(myVar))
-		DebugPrint("global String " + globalVar + " failed to create")
+		DebugPrint("failed to create global string " + globalVar)
 		return 0
-	else
-		myVar = strValue
-		return 1
 	endif
+
+	myVar = strValue
+
+	return 1
 End
 
 // returns the Value of a global String. Returns NullString on Error.
 Function/S getGlobalStr(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist")
+		return ""
+	endif
 
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
-
 	if(!SVAR_Exists(myVar))
+		DebugPrint("global String does not exist")
 		return ""
-	else
-		return myVar
 	endif
+
+	return myVar
 End
 
+// @returns 1 if global string is not present
 Function killGlobalStr(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist", loglevel=3)
+		return 1
+	endif
+
 	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(!SVAR_Exists(myVar))
+		DebugPrint("Global String does not exist: " + globalVar, loglevel=3)
+		return 1
+	endif
 
 	KillStrings/Z dfr:$globalVar
-
-	if(!SVAR_Exists(myVar))
-		return 1
-	else
+	SVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(SVAR_Exists(myVar))
+		DebugPrint("Could not delete global String " + globalVar)
 		return 0
 	endif
+
+	return 1
 End
 
 Function killGlobalVar(globalVar)
 	String globalVar
-	DFREF dfr = createDFWithAllParents(pkgFolder)
+
+	DFREF dfr = $pkgFolder
+	if(!DataFolderExistsDFR(dfr))
+		DebugPrint("Package DataFolder " + pkgFolder + " does not exist", loglevel=3)
+		return 1
+	endif
+
 	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(!NVAR_Exists(myVar))
+		DebugPrint("Global Variable does not exist: " + globalVar, loglevel=3)
+		return 1
+	endif
 
 	KillVariables/Z dfr:$globalVar
-
-	if(!NVAR_Exists(myVar))
-		return 1
-	else
+	NVAR/Z/SDFR=dfr myVar = dfr:$globalVar
+	if(NVAR_Exists(myVar))
+		DebugPrint("Could not delete global Variable " + globalVar)
 		return 0
 	endif
+
+	return 1
 End
 
 // extended function of WM's startMSTimer
@@ -297,4 +340,29 @@ Function isCompiled([funcList])
 		return 0
 	endif
 	return 1
+End
+
+/// Checks if the datafolder referenced by dfr exists.
+/// Unlike DataFolderExists() a dfref pointing to an empty ("") dataFolder is considered non-existing here.
+///
+/// https://www.wavemetrics.com/code-snippet/datafolderexists-data-folder-references
+///
+/// @returns one if dfr is valid and references an existing datafolder, zero otherwise
+Function DataFolderExistsDFR(dfr)
+	dfref dfr
+
+	string dataFolder
+
+	switch(DataFolderRefStatus(dfr))
+		case 0: // invalid ref, does not exist
+			return 0
+		case 1: // might be valid
+			dataFolder = GetDataFolder(1,dfr)
+			return cmpstr(dataFolder,"") != 0 && DataFolderExists(dataFolder)
+		case 3: // free data folders always exist
+			return 1
+		default:
+			Abort "unknown status"
+			return 0
+	endswitch
 End
