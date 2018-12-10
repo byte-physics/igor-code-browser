@@ -341,7 +341,7 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 
 	// search code and return wavLineNumber
 	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
-	re = "^(?i)[[:space:]]*((?:override)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+(.*)=.*"
+	re = "^(?i)[[:space:]]*((?:override)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+([^=]*)=.*"
 	Grep/Q/INDX/E=re text
 	Wave W_Index
 	Duplicate/FREE W_Index wavLineNumber
