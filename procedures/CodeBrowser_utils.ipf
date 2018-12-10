@@ -53,10 +53,17 @@ Function/S addToItemsInList(list, [sep, suffix, prefix])
 	return resultList
 End
 
+// check if the specified module is ProcGlobal
+//
+// @param module string containing the module name
+// @returns 1 if @p module is an empty string or equal to `ProcGlobal`
 Function isProcGlobal(module)
 	string module
 
-	return cmpstr(module, "ProcGlobal") == 0
+	if(strlen(module) == 0 || !cmpstr(module, "ProcGlobal"))
+		return 1
+	endif
+	return 0
 End
 
 // Returns the dimension of the first screen
