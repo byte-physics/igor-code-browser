@@ -976,7 +976,7 @@ End
 
 // Shows the line/function for the function/macro with the given index into decl
 // With no index just the procedure file is shown
-Function showCode(procedure,[index])
+Function showCode(procedure, [index])
 	string procedure
 	variable index
 
