@@ -294,7 +294,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 	String options, funcList
 	string func, funcDec, fi
 	string threadsafeTag, specialTag, params, subtypeTag, returnType
-	variable idx, numMatches, numEntries
+	variable i, idx, numMatches, numEntries
 
 	// list normal, userdefined, override and static functions
 	options  = "KIND:18,WIN:" + procedure
@@ -302,8 +302,10 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 	numMatches = ItemsInList(funcList)
 	numEntries = DimSize(declWave, 0)
 	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
-	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
-		func = StringFromList(idx, funcList)
+
+	idx = numEntries
+	for(i = 0; i < numMatches; i += 1)
+		func = StringFromList(i, funcList)
 		fi = FunctionInfo(module + "#" + func, procedure)
 		if(!cmpstr(func, "Procedures Not Compiled"))
 			fi = ReplaceNumberByKey("PROCLINE", fi, 0)
@@ -319,6 +321,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
 		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType = returnType)
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
+		idx += 1
 	endfor
 
 	string msg
