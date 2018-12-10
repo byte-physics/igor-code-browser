@@ -37,6 +37,10 @@ StrConstant pkgFolder         = "root:Packages:CodeBrowser"
 // second column: full declaration of the  function/macro
 // one row for each function/macro
 StrConstant declarations      = "declarations"
+// 2D Wave
+// first  column: marker description
+// second column: function comment
+StrConstant helpWave          = "help"
 // 1D Wave in each row having the line of the function or -1 for macros
 StrConstant declarationLines  = "lines"
 // database-like global multidimensional waves for storing parsing results to minimize time.
@@ -327,15 +331,17 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 
 	String options, funcList
 	string func, funcDec, fi
-	string threadsafeTag, specialTag, params, subtypeTag, returnType
+	string threadsafeTag, specialTag, params, subtypeTag, returnType, entityType
 	variable i, idx, numMatches, numEntries
+
+	Wave/T helpWave = getHelpWave()
 
 	// list normal, userdefined, override and static functions
 	options  = "KIND:18,WIN:" + procedure
 	funcList = FunctionList("*", ";", options)
 	numMatches = ItemsInList(funcList)
 	numEntries = DimSize(declWave, 0)
-	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave, helpWave
 
 	idx = numEntries
 	for(i = 0; i < numMatches; i += 1)
@@ -352,8 +358,11 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
 		params        = interpretParameters(fi)
-		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
+		entityType = "function" + specialTag + threadsafeTag
+		declWave[idx][0] = createMarkerForType(entityType)
 		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType)
+		helpWave[idx][0] = entityType
+		helpWave[idx][1] = AddHTML(TrimFunctionComment(getFunctionLine(-inf, fi)))
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 		idx += 1
 	endfor
@@ -371,6 +380,8 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 
 	Variable numLines, i, idx, numEntries, numMatches
 	String procText, re, def, name
+
+	Wave/T helpWave = getHelpWave()
 
 	// get procedure code
 	procText = getProcedureText("", 0, module, procedureWithoutModule)
@@ -392,7 +403,7 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 
 	numMatches = DimSize(wavLineNumber, 0)
 	numEntries = DimSize(declWave, 0)
-	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave, helpWave
 
 	idx = numEntries
 	for(i = 0; i < numMatches; i += 1)
@@ -414,6 +425,8 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 
 	Variable numLines, idx, numEntries, numMatches
 	String procText, re, def, name, arguments, type
+
+	Wave/T helpWave = getHelpWave()
 
 	// get procedure code
 	procText = getProcedureText("", 0, module, procedureWithoutModule)
@@ -437,7 +450,7 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 
 	numMatches = DimSize(wavLineNumber, 0)
 	numEntries = DimSize(declWave, 0)
-	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave, helpWave
 
 	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
 		SplitString/E=re text[wavLineNumber[(idx - numEntries)]], def, name, arguments, type
@@ -460,6 +473,8 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 
 	variable numLines, idx, numEntries, numMatches
 	string procText, reStart, reEnd, name, StaticKeyword
+
+	Wave/T helpWave = getHelpWave()
 
 	// get procedure code
 	procText = getProcedureText("", 0, module, procedureWithoutModule)
@@ -502,7 +517,7 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 	endif
 
 	numEntries = DimSize(declWave, 0)
-	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave, helpWave
 
 	for(idx = numEntries; idx < (numEntries + numMatches); idx +=1)
 		SplitString/E=reStart text[wavStructureStart[(idx - numEntries)]], StaticKeyword, name
@@ -531,6 +546,8 @@ Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
 	String procText, re, def, name, type
 	String currentMenu = ""
 
+	Wave/T helpWave = getHelpWave()
+
 	// get procedure code
 	procText = getProcedureText("", 0, module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
@@ -551,7 +568,7 @@ Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
 
 	numMatches = DimSize(wavLineNumber, 0)
 	numEntries = DimSize(declWave, 0)
-	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave
+	Redimension/N=(numEntries + numMatches, -1) declWave, lineWave, helpWave
 
 	for(idx = numEntries; idx < (numEntries + numMatches); idx += 1)
 		SplitString/E=re text[wavLineNumber[(idx - numEntries)]], def, name, type
@@ -646,15 +663,18 @@ Function/S getVariableName(strDefinition)
 	return	 strVariableName
 End
 
-static Function resetLists(decls, lines)
+static Function resetLists(decls, lines, helps)
 	Wave/T decls
 	Wave/D lines
-	Redimension/N=(0, -1) decls, lines
+	Wave/T helps
+	Redimension/N=(0, -1) decls, lines, helps
 End
 
-static Function sortListByLineNumber(decls, lines)
+// @todo IgorPro >= 7 supports SortColumns
+static Function sortListByLineNumber(decls, lines, helps)
 	Wave/T decls
 	Wave/D lines
+	Wave/T helps
 
 	// check if sort is necessary
 	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
@@ -663,14 +683,20 @@ static Function sortListByLineNumber(decls, lines)
 
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
-	Sort/A lines, lines, declCol0, declCol1
+	Duplicate/T/FREE/R=[][0] helps, helpCol0
+	Duplicate/T/FREE/R=[][1] helps, helpCol1
+	Sort/A lines, lines, declCol0, declCol1, helpCol0, helpCol1
 	decls[][0] = declCol0[p][0]
 	decls[][1] = declCol1[p][0]
+	helps[][0] = helpCol0[p][0]
+	helps[][1] = helpCol1[p][0]
 End
 
-static Function sortListByName(decls, lines)
+// @todo IgorPro >= 7 supports SortColumns
+static Function sortListByName(decls, lines, helps)
 	Wave/T decls
 	Wave/D lines
+	Wave/T helps
 
 	// check if sort is necessary
 	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
@@ -679,9 +705,13 @@ static Function sortListByName(decls, lines)
 
 	Duplicate/T/FREE/R=[][0] decls, declCol0
 	Duplicate/T/FREE/R=[][1] decls, declCol1
-	Sort/A declCol1, lines, declCol0, declCol1
+	Duplicate/T/FREE/R=[][0] helps, helpCol0
+	Duplicate/T/FREE/R=[][1] helps, helpCol1
+	Sort/A declCol1, lines, declCol0, declCol1, helpCol0, helpCol1
 	decls[][0] = declCol0[p][0]
 	decls[][1] = declCol1[p][0]
+	helps[][0] = helpCol0[p][0]
+	helps[][1] = helpCol1[p][0]
 End
 
 // Parses all procedure windows and write into the decl and line waves
@@ -702,9 +732,10 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 	// load global lists
 	Wave/T decls = getDeclWave()
 	Wave/I lines = getLineWave()
+	Wave/T helps = getHelpWave()
 
 	// scan and add elements to lists
-	resetLists(decls, lines)
+	resetLists(decls, lines, helps)
 	addDecoratedFunctions(procedure.module, procedure.fullName, decls, lines)
 	addDecoratedConstants(procedure.module, procedure.name, decls, lines)
 	addDecoratedMacros(procedure.module, procedure.name, decls, lines)
@@ -721,6 +752,7 @@ static Function saveResults(procedure)
 
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
+	Wave/T helpWave = getHelpWave()
 
 	Wave/WAVE SaveWavesWave     = getSaveWaves()
 	Wave/T 	  SaveStringsWave   = getSaveStrings()
@@ -745,10 +777,12 @@ static Function saveResults(procedure)
 	// save Results. Waves as References to free waves and the Id-Identifier
 	Duplicate/FREE declWave myFreeDeclWave
 	Duplicate/FREE lineWave myFreeLineWave
+	Duplicate/FREE helpWave myFreeHelpWave
 	SaveStringsWave[procedure.row][0] 	= procedure.id
 	SaveStringsWave[procedure.row][1] 	= getChecksum()
 	SaveWavesWave[procedure.row][0] = myFreeDeclWave
 	SaveWavesWave[procedure.row][1] = myFreeLineWave
+	SaveWavesWave[procedure.row][2] = myFreeHelpWave
 	SaveVariablesWave[procedure.row][0] = 1 // mark as valid
 	SaveVariablesWave[procedure.row][1] = getParsingTime() // time in micro seconds
 	SaveVariablesWave[procedure.row][2] = getCheckSumTime() // time in micro seconds
@@ -776,6 +810,7 @@ static Function saveLoad(procedure)
 
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
+	Wave/T helpWave = getHelpWave()
 
 	Wave/WAVE SaveWavesWave     = getSaveWaves()
 	Wave/T    SaveStringsWave   = getSaveStrings()
@@ -808,7 +843,7 @@ static Function saveLoad(procedure)
 	endif
 
 	numResults = Dimsize(SaveWavesWave[procedure.row][0], 0)
-	Redimension/N=(numResults, -1) declWave, lineWave
+	Redimension/N=(numResults, -1) declWave, lineWave, helpWave
 	if(numResults == 0)
 		debugPrint("no elements in save state")
 		return 0
@@ -816,8 +851,10 @@ static Function saveLoad(procedure)
 
 	WAVE/T load0 = SaveWavesWave[procedure.row][0]
 	WAVE/I load1 = SaveWavesWave[procedure.row][1]
+	WAVE/T load2 = SaveWavesWave[procedure.row][2]
 	declWave[][0, 1] = load0[p][q]
 	lineWave[] = load1[p]
+	helpWave[][0, 1] = load2[p][q]
 
 	debugPrint("save state loaded successfully")
 	return 1
@@ -958,6 +995,56 @@ Function/S getFunctionLine(lineNo, funcInfo)
 	return StringFromList(lineNo, context, "\r")
 End
 
+// return only fully-commented lines from the given input
+Function/S TrimFunctionComment(context)
+	string context
+
+	string comment = GrepList(context, "^(?i)//.*$", 0, "\r")
+	return RemoveEnding(comment, "\r")
+End
+
+// add basic html
+Function/S AddHTML(context)
+	string context
+
+	string line, html, re
+	string str0, str1, str2, str3, str4
+	variable n, lines
+
+	html = ""
+	lines = ItemsInList(context, "\r")
+	for(n = 0; n < lines; n += 1)
+		line = StringFromList(n, context, "\r")
+		re = "\s*([\/]{2,})\s?(.*)"
+		SplitString/E=(re) line, str0, str1
+		if(V_flag != 2)
+			break
+		endif
+		line = str1
+		if(strlen(str0) == 3) // Doxygen comments
+			re = "(?i)(.*@param(?:\[(?:in|out)\])?\s+)(\w+)(\s.*)"
+			SplitString/E=(re) line, str0, str1, str2
+			if(V_flag == 3)
+				line  = str0
+				line += "<b>" + str1 + "</b> "
+				line += str2
+			endif
+			re = "(?i)(.*)@(\w+)(\s.*)"
+			SplitString/E=(re) line, str0, str1, str2
+			if(V_flag == 3)
+				line  = str0
+				line += "<b>@</b><i>" + str1 + "</i>"
+				line += str2
+			endif
+		endif
+		html += line + "<br>"
+	endfor
+	html = RemoveEnding(html, "<br>")
+	html = "<code>" + html + "</code>"
+
+	return html
+End
+
 // get code of procedure in module
 //
 // see `DisplayHelpTopic("ProcedureText")`
@@ -990,6 +1077,7 @@ Function updateListBoxHook()
 	// load global lists (for sort)
 	Wave/T decls = getDeclWave()
 	Wave/I lines = getLineWave()
+	Wave/T helps = getHelpWave()
 
 	// get procedure information
 	procedure.fullName = getCurrentItem(procedure = 1)
@@ -1014,22 +1102,23 @@ Function updateListBoxHook()
 	// check if search is necessary
 	searchString = getGlobalStr("search")
 	if(strlen(searchString) > 0)
-		searchAndDelete(decls, lines, searchString)
+		searchAndDelete(decls, lines, helps, searchString)
 	endif
 
 	// switch sort type
 	if(returnCheckBoxSort())
-		sortListByName(decls, lines)
+		sortListByName(decls, lines, helps)
 	else
-		sortListByLineNumber(decls, lines)
+		sortListByLineNumber(decls, lines, helps)
 	endif
 
 	return DimSize(decls, 0)
 End
 
-Function searchAndDelete(decls, lines, searchString)
+Function searchAndDelete(decls, lines, helps, searchString)
 	Wave/T decls
 	Wave/I lines
+	Wave/T helps
 	String searchString
 
 	Variable i, numEntries
@@ -1041,16 +1130,16 @@ Function searchAndDelete(decls, lines, searchString)
 
 	for(i = numEntries - 1; i > 0; i -= 1)
 		if(strsearch(decls[i][1], searchString, 0, 2) == -1)
-			DeletePoints/M=0 i, 1, decls, lines
+			DeletePoints/M=0 i, 1, decls, lines, helps
 		endif
 	endfor
 
 	// prevent loss of dimension if no match was found at all.
 	if(strsearch(decls[0][1], searchString, 0, 2) == -1)
 		if(Dimsize(decls, 0) == 1)
-			Redimension/N=(0, -1) decls, lines
+			Redimension/N=(0, -1) decls, lines, helps
 		else
-			DeletePoints/M=0 i, 1, decls, lines
+			DeletePoints/M=0 i, 1, decls, lines, helps
 		endif
 	endif
 End
@@ -1129,6 +1218,20 @@ Function/S getModuleList()
 	return moduleList
 End
 
+// get help wave: after parsing the function comment is stored here
+//
+// Return refrence to (text) Wave/T
+Function/Wave getHelpWave()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/T/SDFR=dfr wv = $helpWave
+
+	if(!WaveExists(wv))
+		Make/T/N=(128, 2) dfr:$helpWave/Wave=wv
+	endif
+
+	return wv
+End
+
 // Returns declarations: after parsing the object names and variables are stored in this wave.
 // Return refrence to (text) Wave/T
 Function/Wave getDeclWave()
@@ -1177,11 +1280,18 @@ static Function/Wave getSaveWaves()
 	DFREF dfr = createDFWithAllParents(pkgFolder)
 	WAVE/Z/WAVE/SDFR=dfr wv = $CsaveWaves
 
-	if(!WaveExists(wv))
-		Make/WAVE/N=(0,2) dfr:$CsaveWaves/Wave=wv // wave of wave references
+	if(WaveExists(wv))
+		if(DimSize(wv, 1) == 2)
+			// update version 0 to 1
+			Redimension/N=(-1, 3) wv
+		endif
+	elseif(!WaveExists(wv))
+		//version 1
+		Make/WAVE/N=(0,3) dfr:$CsaveWaves/Wave=wv // wave of wave references
 		// Wave with Free Waves:
 		// Column 1: decl (a (text) Wave/T with the results of parsing the procedure file)
-		// Column 1: line (a (integer) Wave/I with the corresponding line numbers within the procedure file)
+		// Column 2: line (a (integer) Wave/I with the corresponding line numbers within the procedure file)
+		// Column 3: help (a (text) Wave/T with the corresponding function comment)
 	endif
 
 	return wv
