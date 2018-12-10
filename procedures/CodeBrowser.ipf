@@ -268,7 +268,7 @@ Function/S createMarkerForType(type)
 End
 
 // Pretty printing of function/macro with additional info
-Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
+Function/S formatDecl(funcOrMacro, params, subtypeTag, returnType)
 	string funcOrMacro, params, subtypeTag, returnType
 
 	if(!isEmpty(subtypeTag))
@@ -276,7 +276,7 @@ Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
 	endif
 
 	string decl
-	if(ParamIsDefault(returnType))
+	if(strlen(returnType) == 0)
 		sprintf decl, "%s(%s)%s", funcOrMacro, params, subtypeTag
 	else
 		sprintf decl, "%s(%s) -> %s%s", funcOrMacro, params, returnType, subtypeTag
@@ -319,7 +319,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
 		params        = interpretParameters(fi)
 		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
-		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType = returnType)
+		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType)
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 		idx += 1
 	endfor
@@ -720,7 +720,7 @@ static Function saveResults(procedure)
 	SaveVariablesWave[procedure.row][2] = getCheckSumTime() // time in micro seconds
 
 	// if function list could not be acquired don't save the checksum
-	if(!numpnts(declWave) || !cmpstr(declWave[0][1], "Procedures Not Compiled() -> "))
+	if(!DimSize(declWave, 0) || !cmpstr(declWave[0][1], "Procedures Not Compiled()")) ///@todo check in all rows.
 		DebugPrint("Function list is not complete")
 		SaveStringsWave[procedure.row][1] = "no checksum"
 	endif
