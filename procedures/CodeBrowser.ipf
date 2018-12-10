@@ -879,18 +879,17 @@ Function/S nicifyProcedureList(list)
 End
 
 // returns code of procedure in module
-Function/S getProcedureText(module, procedureWithoutModule)
-	String module, procedureWithoutModule
-	String strProcedure
+//
+// @param module    independent module
+// @param procedure procedure without module definition
+Function/S getProcedureText(module, procedure)
+	string module, procedure
 
-	if(isProcGlobal(module))
-		debugPrint(module + " is in ProcGlobal")
-		strProcedure = ProcedureText("", 0, procedureWithoutModule)
-		return strProcedure
-	else
-		debugPrint(procedureWithoutModule + " is in " + module)
-		return ProcedureText("", 0, procedureWithoutModule + " [" + module + "]")
+	if(!isProcGlobal(module))
+		procedure = procedure + " [" + module + "]"
 	endif
+
+	return ProcedureText("", 0, procedure)
 End
 
 // Returns 1 if the procedure file has content which we can show, 0 otherwise
