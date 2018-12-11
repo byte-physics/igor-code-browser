@@ -947,8 +947,11 @@ Function searchAndDelete(decls, lines, searchString)
 
 	Variable i, numEntries
 
-	// search and delete backwards for simplicity reasons
 	numEntries = Dimsize(decls, 0)
+	if(numEntries == 0)
+		return 0
+	endif
+
 	for(i = numEntries - 1; i > 0; i -= 1)
 		if(strsearch(decls[i][1], searchString, 0, 2) == -1)
 			DeletePoints/M=0 i, 1, decls, lines
