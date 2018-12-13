@@ -230,27 +230,26 @@ Function isInitialized()
 	return getGlobalVar("initialized") == 1
 End
 
-// Returns the currently selected item from the panel defined by the optional arguments.
-// Exactly one optional argument must be given.
-//
-// @param module:              Module from ProcGlobal/Independent Module list
-// @param procedure:           "myProcedure.ipf [moduleName]"
-// @param procedureWithModule: "myProcedure.ipf"
-// @param index:               Zero-based index into main listbox
-//
-// @returns the currently selected item
-Function/S getCurrentItem([module, procedure, procedureWithoutModule, index])
-	variable module, procedureWithoutModule, procedure, index
+/// Returns the currently selected item from the panel defined by the optional arguments.
+///
+/// Exactly one optional argument must be given.
+///
+/// @param module     [optional] Module from ProcGlobal/Independent Module list
+/// @param procedure  [optional] "myProcedure.ipf [moduleName]"
+/// @param index      [optional] Zero-based index into main listbox
+///
+/// @returns the currently selected item
+Function/S getCurrentItem([module, procedure, index])
+	variable module, procedure, index
 
-	string procName
+	string procName, rawList
 
-	module                 =  ParamIsDefault(module)                 ? 0 : 1
-	procedureWithoutModule =  ParamIsDefault(procedureWithoutModule) ? 0 : 1
-	procedure              =  ParamIsDefault(procedure)              ? 0 : 1
-	index                  =  ParamIsDefault(index)                  ? 0 : 1
+	module    =  ParamIsDefault(module)    ? 0 : 1
+	procedure =  ParamIsDefault(procedure) ? 0 : 1
+	index     =  ParamIsDefault(index)     ? 0 : 1
 
 	// only one optional argument allowed
-	if(module + procedure + procedureWithoutModule + index != 1)
+	if(module + procedure + index != 1)
 		return "_error_"
 	endif
 
@@ -266,26 +265,49 @@ Function/S getCurrentItem([module, procedure, procedureWithoutModule, index])
 		if(V_Value >= 0)
 			return num2str(V_Value)
 		endif
-	elseif(procedure || procedureWithoutModule)
-
+	elseif(procedure)
 		ControlInfo/W=$panel $procCtrl
 		V_Value -= 1 // 1-based index
-		string rawList = GetUserData(panel,procCtrl,userDataRawList)
 
+		rawList = GetUserData(panel, procCtrl, userDataRawList)
 		if(V_Value < 0 || V_Value >= ItemsInList(rawList))
 			return "_error_"
 		endif
 
-		procName = StringFromList(V_Value,rawList)
-
-		if(procedureWithoutModule)
-			return RemoveEverythingAfter(procName," [")
-		endif
-
+		procName = StringFromList(V_Value, rawList)
 		return procName
 	endif
 
 	return "_error_"
+End
+
+/// Get the basic procedure name from a full procedure name
+///
+/// @param fullName  "myProcedure.ipf [moduleName]"
+///
+/// @returns myProcedure.ipf without module definition
+Function/S ProcedureWithoutModule(fullName)
+	string fullName
+
+	return RemoveEverythingAfter(fullName, " [")
+End
+
+/// Get the module name from a full procedure name
+///
+/// @param fullName  "myProcedure.ipf [moduleName]"
+///
+/// @returns moduleName without procedure specification
+Function/S ModuleWithoutProcedure(fullName)
+	string fullName
+
+	string module, procedure
+
+	SplitString/E="(.*)\ \[(\w+)\]" fullName, procedure, module
+	if(V_flag != 2)
+		return ""
+	endif
+
+	return module
 End
 
 // Returns the currently selected item from the panel defined by the optional arguments.

@@ -993,9 +993,9 @@ Function updateListBoxHook()
 	Wave/I lines = getLineWave()
 
 	// get procedure information
-	procedure.name     = getCurrentItem(procedureWithoutModule = 1)
-	procedure.module   = getCurrentItem(module = 1)
-	procedure.fullName = getCurrentItem(procedure = 1) // remove this if maclist is removed
+	procedure.fullName = getCurrentItem(procedure = 1)
+	procedure.name     = ProcedureWithoutModule(procedure.fullName)
+	procedure.module   = ModuleWithoutProcedure(procedure.fullName)
 	procedure.id       = procedure.module + "#" + procedure.name
 	procedure.row      = getSaveRow(procedure.id)
 
