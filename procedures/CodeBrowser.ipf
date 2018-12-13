@@ -892,11 +892,10 @@ Function KillStorage()
 	killGlobalvar("parsingTime")
 End
 
-// Returns a list with the following optional suffixes removed:
-// -Module " [.*]"
-// -Ending ".ipf"
-// -Both ".ipf [.*]"
-Function/S nicifyProcedureList(list)
+/// @brief Return a list of procedures with the module suffix " [.*]" removed
+//
+/// @see ProcedureListRemoveEnding
+Function/S ProcedureListRemoveModule(list)
 	string list
 
 	variable i, idx
@@ -905,6 +904,23 @@ Function/S nicifyProcedureList(list)
 	for(i = 0; i < ItemsInList(list); i += 1)
 		item = StringFromList(i, list)
 		item = RemoveEverythingAfter(item, " [")
+		niceList = AddListItem(item, niceList, ";", inf)
+	endfor
+
+	return niceList
+End
+
+/// @brief Return a list of procedures with the ending ".ipf" removed
+//
+/// @see ProcedureListRemoveModule
+Function/S ProcedureListRemoveEnding(list)
+	string list
+
+	variable i, idx
+	string item, niceList=""
+
+	for(i = 0; i < ItemsInList(list); i += 1)
+		item = StringFromList(i, list)
 		item = RemoveEverythingAfter(item, ".ipf")
 		niceList = AddListItem(item, niceList, ";", inf)
 	endfor
@@ -1189,15 +1205,32 @@ static Function/Wave getSaveVariables()
 	return wv
 End
 
-// Returns a list of all procedure files of the given independent module/ProcGlobal
-Function/S getProcList(module)
-	String module
+// Get a list of all procedure files of the given independent module/ProcGlobal
+//
+// @param module    Independent Module or ProcGlobal Namespace
+// @param addModule [optional, default 0] add the module to the list
+//                  Module is added as Module#Procedure in a way similar to Module#Function()
+Function/S getProcList(module, [addModule])
+	string module
+	variable addModule
 
-	if( isProcGlobal(module) )
-		return getGlobalProcWindows()
+	string procedures
+
+	addModule = ParamIsDefault(addModule) ? 0 : !!addModule
+
+	if(isProcGlobal(module))
+		module = "ProcGlobal"
+		procedures = getGlobalProcWindows()
 	else
-  		return getIMProcWindows(module)
+		procedures = getIMProcWindows(module)
 	endif
+
+	if(addModule)
+		procedures = ProcedureListRemoveEnding(procedures)
+		module = module + "#"
+		procedures = AddToItemsInList(procedures, prefix=module)
+	endif
+	return procedures
 End
 
 static Function getParsingTime()

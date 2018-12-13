@@ -28,6 +28,8 @@ static StrConstant userDataNiceList = "niceList"
 
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
+static StrConstant selectAll = "<ALL>"
+
 Function/S GetPanel()
 	return panel
 End
@@ -135,6 +137,7 @@ Function/S generateModuleList()
 	debugPrint("called")
 
 	string niceList = getModuleList()
+	niceList = AddListItem(selectAll, niceList)
 
 	PopupMenu $moduleCtrl, win=$panel, userData($userDataNiceList)=niceList
 
@@ -144,11 +147,30 @@ End
 // Callback for the procedure popup, returns a nicified list
 // Stores both the nicified list and the raw list as user data
 Function/S generateProcedureList()
-	debugPrint("called")
+	string module, modules, procList, niceList
+	variable numModules, i
 
-	string module = getCurrentItem(module=1)
-	string procList = getProcList(module)
-	string niceList = nicifyProcedureList(procList)
+	module = getCurrentItem(module = 1)
+	if(!cmpstr(module, selectAll))
+		procList = ""
+		niceList = ""
+		modules = getModuleList()
+		numModules = ItemsInList(modules)
+		for(i = 0; i < numModules; i += 1)
+			module = StringFromList(i, modules)
+			procList += getProcList(module)
+			if(isProcGlobal(module))
+				niceList += getProcList(module)
+			else
+				niceList += getProcList(module, addModule = 1)
+			endif
+		endfor
+	else
+		procList = getProcList(module)
+		niceList = procList
+	endif
+	niceList = ProcedureListRemoveModule(niceList)
+	niceList = ProcedureListRemoveEnding(niceList)
 
 	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
 
