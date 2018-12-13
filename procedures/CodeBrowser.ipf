@@ -996,7 +996,7 @@ Function updateListBoxHook()
 	procedure.fullName = getCurrentItem(procedure = 1)
 	procedure.name     = ProcedureWithoutModule(procedure.fullName)
 	procedure.module   = ModuleWithoutProcedure(procedure.fullName)
-	procedure.id       = procedure.module + "#" + procedure.name
+	procedure.id       = procedure.module + "#" + RemoveEverythingAfter(procedure.name, ".ipf")
 	procedure.row      = getSaveRow(procedure.id)
 
 	// load procedure
