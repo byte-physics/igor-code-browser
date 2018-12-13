@@ -217,15 +217,15 @@ Function/S interpretParameters(funcInfo)
 	return str
 End
 
-// check if Function has as a structure as first parameter
-//
-// the structure definition has to be in the first line after the function definition
-//
-// @param[in]  funcInfo        output of FunctionInfo for the function in question
-// @param[out] structureName   matched name of the structure as string.
-//                             Not changed if 0 is returned.
-//
-// @returns 1 if function has such a parameter, 0 otherwise
+/// check if Function has as a structure as first parameter
+///
+/// the structure definition has to be in the first line after the function definition
+///
+/// @param[in]  funcInfo        output of FunctionInfo for the function in question
+/// @param[out] structureName   matched name of the structure as string.
+///                             Not changed if 0 is returned.
+///
+/// @returns 1 if function has such a parameter, 0 otherwise
 Function GetStructureArgument(funcInfo, structureName)
 	string funcInfo
 	string &structureName
@@ -927,16 +927,16 @@ Function/S ProcedureListRemoveEnding(list)
 	return niceList
 End
 
-// Get the specified line of code from a function
-//
-// @see getProcedureText
-//
-// @param funcInfo  output of FunctionInfo for the function in question
-// @param lineNo    line number relative to the function definition
-//                  set to -1 to return lines before the procedure that are not part of the preceding macro or function
-//                  see `DisplayHelpTopic("ProcedureText")`
-//
-// @returns lines of code from a function inside a procedure file
+/// Get the specified line of code from a function
+///
+/// @see getProcedureText
+///
+/// @param funcInfo  output of FunctionInfo for the function in question
+/// @param lineNo    line number relative to the function definition
+///                  set to -1 to return lines before the procedure that are not part of the preceding macro or function
+///                  see `DisplayHelpTopic("ProcedureText")`
+///
+/// @returns lines of code from a function inside a procedure file
 Function/S getFunctionLine(lineNo, funcInfo)
 	variable lineNo
 	string funcInfo
