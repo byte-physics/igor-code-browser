@@ -1154,7 +1154,6 @@ static Function setCheckSum(procedure)
 	timer = timerStart()
 
 	procText = getProcedureText(procedure.module, procedure.name)
-	procText = ProcedureText("", 0, procedure.fullname)
 	returnValue = setGlobalStr("parsingChecksum", Hash(procText, 1))
 
 	setCheckSumTime(timerStop(timer))
