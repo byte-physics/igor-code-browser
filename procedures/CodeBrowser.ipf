@@ -53,9 +53,11 @@ static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STR
 // Loosely based on the WM procedure from the documentation
 // Returns a human readable string for the given parameter/return type.
 // See the documentation for FunctionInfo for the exact values.
-Function/S interpretParamType(ptype, paramOrReturn)
+Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 	variable ptype, paramOrReturn
+	string funcInfo
 
+	string typeName
 	string typeStr = ""
 
 	if(paramOrReturn != 0 && paramOrReturn != 1)
@@ -117,7 +119,11 @@ Function/S interpretParamType(ptype, paramOrReturn)
 	elseif(ptype & 0x100)
 		typeStr += "dfref"
 	elseif(ptype & 0x200)
-		typeStr += "struct"
+		if(GetStructureArgument(funcInfo, typeName))
+			typeStr += typeName
+		else
+			typeStr += "struct"
+		endif
 	elseif(ptype & 0x400)
 		typeStr += "funcref"
 	endif
@@ -191,7 +197,7 @@ Function/S interpretParameters(funcInfo)
 
 	for(i = 0; i < numParams; i += 1)
 		sprintf key, "PARAM_%d_TYPE", i
-		paramType = interpretParamType(NumberByKey(key, funcInfo), 1)
+		paramType = interpretParamType(NumberByKey(key, funcInfo), 1, funcInfo)
 
 		if(i == numParams - numOptParams)
 			str += "["
@@ -209,6 +215,34 @@ Function/S interpretParameters(funcInfo)
 	endif
 
 	return str
+End
+
+// check if Function has as a structure as first parameter
+//
+// the structure definition has to be in the first line after the function definition
+//
+// @param[in]  funcInfo        output of FunctionInfo for the function in question
+// @param[out] structureName   matched name of the structure as string.
+//                             Not changed if 0 is returned.
+//
+// @returns 1 if function has such a parameter, 0 otherwise
+Function GetStructureArgument(funcInfo, structureName)
+	string funcInfo
+	string &structureName
+
+	string declaration, re, str0
+
+	if(NumberByKey("PARAM_0_TYPE", funcInfo) & (0x200 | 0x1000)) // struct | pass-by-reference
+		declaration = getFunctionLine(1, funcInfo)
+		re = "(?i)^\s*struct\s+(\w+)\s+"
+		SplitString/E=(re) declaration, str0
+		if(V_flag == 1)
+			structureName = str0
+			return 1
+		endif
+	endif
+
+	return 0
 End
 
 // Returns a cmd for the given fill *and* stroke color
@@ -268,7 +302,7 @@ Function/S createMarkerForType(type)
 End
 
 // Pretty printing of function/macro with additional info
-Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
+Function/S formatDecl(funcOrMacro, params, subtypeTag, returnType)
 	string funcOrMacro, params, subtypeTag, returnType
 
 	if(!isEmpty(subtypeTag))
@@ -276,7 +310,7 @@ Function/S formatDecl(funcOrMacro, params, subtypeTag, [returnType])
 	endif
 
 	string decl
-	if(ParamIsDefault(returnType))
+	if(strlen(returnType) == 0)
 		sprintf decl, "%s(%s)%s", funcOrMacro, params, subtypeTag
 	else
 		sprintf decl, "%s(%s) -> %s%s", funcOrMacro, params, returnType, subtypeTag
@@ -313,13 +347,13 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 		if(isEmpty(fi))
 			debugPrint("macro or other error for " + module + "#" + func)
 		endif
-		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi),0)
+		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi), 0, fi)
 		threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
 		specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
 		params        = interpretParameters(fi)
 		declWave[idx][0] = createMarkerForType("function" + specialTag + threadsafeTag)
-		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType = returnType)
+		declWave[idx][1] = formatDecl(func, params, subtypeTag, returnType)
 		lineWave[idx]    = NumberByKey("PROCLINE", fi)
 		idx += 1
 	endfor
@@ -339,7 +373,7 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 	String procText, re, def, name
 
 	// get procedure code
-	procText = getProcedureText(module, procedureWithoutModule)
+	procText = getProcedureText("", 0, module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 
 	// search code and return wavLineNumber
@@ -382,7 +416,7 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 	String procText, re, def, name, arguments, type
 
 	// get procedure code
-	procText = getProcedureText(module, procedureWithoutModule)
+	procText = getProcedureText("", 0, module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 
 	// search code and return wavLineNumber
@@ -428,7 +462,7 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 	string procText, reStart, reEnd, name, StaticKeyword
 
 	// get procedure code
-	procText = getProcedureText(module, procedureWithoutModule)
+	procText = getProcedureText("", 0, module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 	if(numLines == 0)
 		debugPrint("no Content in Procedure " + procedureWithoutModule)
@@ -498,7 +532,7 @@ Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
 	String currentMenu = ""
 
 	// get procedure code
-	procText = getProcedureText(module, procedureWithoutModule)
+	procText = getProcedureText("", 0, module, procedureWithoutModule)
 	numLines = ItemsInList(procText, "\r")
 
 	// search code and return wavLineNumber
@@ -720,7 +754,7 @@ static Function saveResults(procedure)
 	SaveVariablesWave[procedure.row][2] = getCheckSumTime() // time in micro seconds
 
 	// if function list could not be acquired don't save the checksum
-	if(!numpnts(declWave) || !cmpstr(declWave[0][1], "Procedures Not Compiled() -> "))
+	if(!DimSize(declWave, 0) || !cmpstr(declWave[0][1], "Procedures Not Compiled()")) ///@todo check in all rows.
 		DebugPrint("Function list is not complete")
 		SaveStringsWave[procedure.row][1] = "no checksum"
 	endif
@@ -878,19 +912,57 @@ Function/S nicifyProcedureList(list)
 	return niceList
 End
 
-// returns code of procedure in module
-Function/S getProcedureText(module, procedureWithoutModule)
-	String module, procedureWithoutModule
-	String strProcedure
+// Get the specified line of code from a function
+//
+// @see getProcedureText
+//
+// @param funcInfo  output of FunctionInfo for the function in question
+// @param lineNo    line number relative to the function definition
+//                  set to -1 to return lines before the procedure that are not part of the preceding macro or function
+//                  see `DisplayHelpTopic("ProcedureText")`
+//
+// @returns lines of code from a function inside a procedure file
+Function/S getFunctionLine(lineNo, funcInfo)
+	variable lineNo
+	string funcInfo
 
-	if(isProcGlobal(module))
-		debugPrint(module + " is in ProcGlobal")
-		strProcedure = ProcedureText("", 0, procedureWithoutModule)
-		return strProcedure
-	else
-		debugPrint(procedureWithoutModule + " is in " + module)
-		return ProcedureText("", 0, procedureWithoutModule + " [" + module + "]")
+	string funcName, module, procedure, context
+	variable linesOfContext
+
+	funcName = StringByKey("NAME", funcInfo)
+	module = StringByKey("INDEPENDENTMODULE", funcInfo)
+	procedure = StringByKey("PROCWIN", funcInfo)
+
+	linesOfContext = lineNo < 0 ? lineNo : 0
+	context = getProcedureText(funcName, linesOfContext, module, procedure)
+
+	if(lineNo < 0)
+		return context
 	endif
+
+	return StringFromList(lineNo, context, "\r")
+End
+
+// get code of procedure in module
+//
+// see `DisplayHelpTopic("ProcedureText")`
+//
+// @param funcName       Name of Function. Leave blank to get full procedure text
+// @param linesOfContext line numbers in addition to the function definition. Set to 0 to return only the function.
+//                       set to -1 to return lines before the procedure that are not part of the preceding macro or function
+// @param module         independent module
+// @param procedure      procedure without module definition
+// @return multi-line string with function definition
+Function/S getProcedureText(funcName, linesOfContext, module, procedure)
+	string funcName, module, procedure
+	variable linesOfContext
+
+	if(!isProcGlobal(module))
+		debugPrint(procedure + " is not in ProcGlobal")
+		procedure = procedure + " [" + module + "]"
+	endif
+
+	return ProcedureText(funcName, linesOfContext, procedure)
 End
 
 // Returns 1 if the procedure file has content which we can show, 0 otherwise
@@ -979,7 +1051,7 @@ End
 
 // Shows the line/function for the function/macro with the given index into decl
 // With no index just the procedure file is shown
-Function showCode(procedure,[index])
+Function showCode(procedure, [index])
 	string procedure
 	variable index
 
@@ -1156,8 +1228,7 @@ static Function setCheckSum(procedure)
 
 	timer = timerStart()
 
-	procText = getProcedureText(procedure.module, procedure.name)
-	procText = ProcedureText("", 0, procedure.fullname)
+	procText = getProcedureText("", 0, procedure.module, procedure.name)
 	returnValue = setGlobalStr("parsingChecksum", Hash(procText, 1))
 
 	setCheckSumTime(timerStop(timer))
