@@ -28,6 +28,8 @@ static StrConstant userDataNiceList = "niceList"
 
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
+static StrConstant selectAll = "<ALL>"
+
 Function/S GetPanel()
 	return panel
 End
@@ -135,6 +137,7 @@ Function/S generateModuleList()
 	debugPrint("called")
 
 	string niceList = getModuleList()
+	niceList = AddListItem(selectAll, niceList)
 
 	PopupMenu $moduleCtrl, win=$panel, userData($userDataNiceList)=niceList
 
@@ -144,11 +147,30 @@ End
 // Callback for the procedure popup, returns a nicified list
 // Stores both the nicified list and the raw list as user data
 Function/S generateProcedureList()
-	debugPrint("called")
+	string module, modules, procList, niceList
+	variable numModules, i
 
-	string module = getCurrentItem(module=1)
-	string procList = getProcList(module)
-	string niceList = nicifyProcedureList(procList)
+	module = getCurrentItem(module = 1)
+	if(!cmpstr(module, selectAll))
+		procList = ""
+		niceList = ""
+		modules = getModuleList()
+		numModules = ItemsInList(modules)
+		for(i = 0; i < numModules; i += 1)
+			module = StringFromList(i, modules)
+			procList += getProcList(module)
+			if(isProcGlobal(module))
+				niceList += getProcList(module)
+			else
+				niceList += getProcList(module, addModule = 1)
+			endif
+		endfor
+	else
+		procList = getProcList(module)
+		niceList = procList
+	endif
+	niceList = ProcedureListRemoveModule(niceList)
+	niceList = ProcedureListRemoveEnding(niceList)
 
 	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
 
@@ -208,25 +230,26 @@ Function isInitialized()
 	return getGlobalVar("initialized") == 1
 End
 
-// Returns the currently selected item from the panel defined by the optional arguments.
-// Exactly one optional argument must be given.
-//
-// module:              Module from ProcGlobal/Independent Module list
-// procedure:           "myProcedure.ipf [moduleName]"
-// procedureWithModule: "myProcedure.ipf"
-// index:               Zero-based index into main listbox
-Function/S getCurrentItem([module, procedure,procedureWithoutModule, index])
-	variable module, procedureWithoutModule, procedure, index
+/// Returns the currently selected item from the panel defined by the optional arguments.
+///
+/// Exactly one optional argument must be given.
+///
+/// @param module     [optional] Module from ProcGlobal/Independent Module list
+/// @param procedure  [optional] "myProcedure.ipf [moduleName]"
+/// @param index      [optional] Zero-based index into main listbox
+///
+/// @returns the currently selected item
+Function/S getCurrentItem([module, procedure, index])
+	variable module, procedure, index
 
-	string procName
+	string procName, rawList
 
-	module                 =  ParamIsDefault(module)                 ? 0 : 1
-	procedureWithoutModule =  ParamIsDefault(procedureWithoutModule) ? 0 : 1
-	procedure              =  ParamIsDefault(procedure)              ? 0 : 1
-	index                  =  ParamIsDefault(index)                  ? 0 : 1
+	module    =  ParamIsDefault(module)    ? 0 : 1
+	procedure =  ParamIsDefault(procedure) ? 0 : 1
+	index     =  ParamIsDefault(index)     ? 0 : 1
 
 	// only one optional argument allowed
-	if(module + procedure + procedureWithoutModule + index != 1)
+	if(module + procedure + index != 1)
 		return "_error_"
 	endif
 
@@ -242,26 +265,49 @@ Function/S getCurrentItem([module, procedure,procedureWithoutModule, index])
 		if(V_Value >= 0)
 			return num2str(V_Value)
 		endif
-	elseif(procedure || procedureWithoutModule)
-
+	elseif(procedure)
 		ControlInfo/W=$panel $procCtrl
 		V_Value -= 1 // 1-based index
-		string rawList = GetUserData(panel,procCtrl,userDataRawList)
 
+		rawList = GetUserData(panel, procCtrl, userDataRawList)
 		if(V_Value < 0 || V_Value >= ItemsInList(rawList))
 			return "_error_"
 		endif
 
-		procName = StringFromList(V_Value,rawList)
-
-		if(procedureWithoutModule)
-			return RemoveEverythingAfter(procName," [")
-		endif
-
+		procName = StringFromList(V_Value, rawList)
 		return procName
 	endif
 
 	return "_error_"
+End
+
+/// Get the basic procedure name from a full procedure name
+///
+/// @param fullName  "myProcedure.ipf [moduleName]"
+///
+/// @returns myProcedure.ipf without module definition
+Function/S ProcedureWithoutModule(fullName)
+	string fullName
+
+	return RemoveEverythingAfter(fullName, " [")
+End
+
+/// Get the module name from a full procedure name
+///
+/// @param fullName  "myProcedure.ipf [moduleName]"
+///
+/// @returns moduleName without procedure specification
+Function/S ModuleWithoutProcedure(fullName)
+	string fullName
+
+	string module, procedure
+
+	SplitString/E="(.*)\ \[(\w+)\]" fullName, procedure, module
+	if(V_flag != 2)
+		return ""
+	endif
+
+	return module
 End
 
 // Returns the currently selected item from the panel defined by the optional arguments.
@@ -304,7 +350,7 @@ Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
 	return -1 // error
 End
 
-// Updates the the given popup menu
+// Updates the given popup menu
 // Tries to preserve the currently selected item
 Function updatePopup(ctrlName)
 	string ctrlName
@@ -320,7 +366,7 @@ Function updatePopup(ctrlName)
 
 	ControlUpdate/W=$panel $ctrlName
 
-	list = GetUserData(panel,procCtrl,userDataNiceList)
+	list = GetUserData(panel, procCtrl, userDataNiceList)
 
 	if(ItemsInList(list) == 1)
 		PopupMenu $ctrlName win=$panel, disable=2
@@ -329,10 +375,10 @@ Function updatePopup(ctrlName)
 	endif
 
 	// try to restore the previously selected item if it differs from the current one
-	variable newIndex = WhichListItem(itemText,list) + 1
+	variable newIndex = WhichListItem(itemText, list) + 1
 
 	if(newIndex != index) // only update if required, as the update triggers the list generating function
-		if( newIndex > 0)
+		if(newIndex > 0)
 			PopupMenu $ctrlName win=$panel, mode=newIndex
 		else
 			PopupMenu $ctrlName win=$panel, mode=1
