@@ -211,11 +211,13 @@ End
 // Returns the currently selected item from the panel defined by the optional arguments.
 // Exactly one optional argument must be given.
 //
-// module:              Module from ProcGlobal/Independent Module list
-// procedure:           "myProcedure.ipf [moduleName]"
-// procedureWithModule: "myProcedure.ipf"
-// index:               Zero-based index into main listbox
-Function/S getCurrentItem([module, procedure,procedureWithoutModule, index])
+// @param module:              Module from ProcGlobal/Independent Module list
+// @param procedure:           "myProcedure.ipf [moduleName]"
+// @param procedureWithModule: "myProcedure.ipf"
+// @param index:               Zero-based index into main listbox
+//
+// @returns the currently selected item
+Function/S getCurrentItem([module, procedure, procedureWithoutModule, index])
 	variable module, procedureWithoutModule, procedure, index
 
 	string procName
@@ -304,7 +306,7 @@ Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
 	return -1 // error
 End
 
-// Updates the the given popup menu
+// Updates the given popup menu
 // Tries to preserve the currently selected item
 Function updatePopup(ctrlName)
 	string ctrlName
@@ -320,7 +322,7 @@ Function updatePopup(ctrlName)
 
 	ControlUpdate/W=$panel $ctrlName
 
-	list = GetUserData(panel,procCtrl,userDataNiceList)
+	list = GetUserData(panel, procCtrl, userDataNiceList)
 
 	if(ItemsInList(list) == 1)
 		PopupMenu $ctrlName win=$panel, disable=2
@@ -329,10 +331,10 @@ Function updatePopup(ctrlName)
 	endif
 
 	// try to restore the previously selected item if it differs from the current one
-	variable newIndex = WhichListItem(itemText,list) + 1
+	variable newIndex = WhichListItem(itemText, list) + 1
 
 	if(newIndex != index) // only update if required, as the update triggers the list generating function
-		if( newIndex > 0)
+		if(newIndex > 0)
 			PopupMenu $ctrlName win=$panel, mode=newIndex
 		else
 			PopupMenu $ctrlName win=$panel, mode=1
