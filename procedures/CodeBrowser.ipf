@@ -816,8 +816,7 @@ static Function saveLoad(procedure)
 
 	WAVE/T load0 = SaveWavesWave[procedure.row][0]
 	WAVE/I load1 = SaveWavesWave[procedure.row][1]
-	declWave[][0] = load0[p][0]
-	declWave[][1] = load0[p][1]
+	declWave[][0, 1] = load0[p][q]
 	lineWave[] = load1[p]
 
 	debugPrint("save state loaded successfully")
