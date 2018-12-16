@@ -66,7 +66,7 @@ Function initializePanel()
 
 	updatePanel()
 
-	setGlobalStr("search", "")
+	setGlobalStr("search", getGlobalStr("search"))
 End
 
 // Prepare for panel closing.
