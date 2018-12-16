@@ -75,6 +75,9 @@ Function createPanel()
 	ListBox $listCtrl, win=$panel,proc=$(module + "#ListBoxProc")
 	ListBox $listCtrl, win=$panel,mode=5,selCol=1, widths={4,40}, keySelectCol=1
 	ListBox $listCtrl, win=$panel,listWave=getDeclWave()
+#if (IgorVersion() >= 8.00)
+	ListBox $listCtrl, win=$panel,helpWave=getHelpWave()
+#endif
 	ListBox $listCtrl, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
 
 	ListBox $listCtrl, userdata(ResizeControlsInfo)= A"!!,?X!!#@\"!!#BNJ,hopz!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
@@ -89,7 +92,7 @@ Function createPanel()
 	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
 	CheckBox $sortCtrl, userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	setGlobalStr("search", "")
+	setGlobalStr("search", getGlobalStr("search"))
 
 	SetVariable $searchCtrl, pos={panelBorder + 118, SortCtrlTop - 2}, size={175.00, 18.00}, proc=$(module + "#searchSet"),title = "search"
 	SetVariable $searchCtrl, limits={-inf,inf,0}, value=$(pkgFolder + ":search"), live = 1
