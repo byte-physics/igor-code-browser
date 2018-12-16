@@ -1103,7 +1103,7 @@ Function/S getIMProcWindows(moduleName)
 
 	string regexp
 	sprintf regexp, "* [%s]", moduleName
-	return 	getProcWindows(regexp,"INDEPENDENTMODULE:1")
+	return 	getProcWindows(regexp, "INDEPENDENTMODULE:1")
 End
 
 // Low level implementation, returns a sorted list of procedure windows matching regexp and options
