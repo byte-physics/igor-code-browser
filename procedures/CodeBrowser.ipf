@@ -545,6 +545,7 @@ Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
 	Wave W_Index
 	Duplicate/FREE W_Index wavLineNumber
 	KillWaves/Z W_Index
+	KillStrings/Z S_filename
 	if(!numMatches)
 		return 0
 	endif
