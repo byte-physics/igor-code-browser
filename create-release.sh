@@ -29,3 +29,5 @@ cd releases && zip -m -z -q -r $zipFile $basename/* < ../internalVersion && cd .
 rmdir $folder
 rm internalVersion
 
+# for igor exchange
+pandoc README.md -t html > README.html
