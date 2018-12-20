@@ -4,7 +4,7 @@ set -e
 
 newVersion=1.1
 
-filesToWatch="procedures INSTALL.txt"
+filesToWatch="procedures README.md"
 
 if [ ! -z "$(git status -s --untracked-files=no $filesToWatch)" ]; then
 	echo "Aborting, please commit the changes first"
