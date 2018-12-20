@@ -40,4 +40,6 @@ this as being inspired by the trailing return types from C++11.
 
 - No parameter types shown for macros
 
+#### Screenshot
+
 ![Screenshot](screenshot-panel.png)
