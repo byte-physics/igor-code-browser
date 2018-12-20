@@ -4,7 +4,7 @@ set -e
 
 newVersion=1.1
 
-filesToWatch="procedures README.md"
+filesToWatch="procedures README.md LICENSE"
 
 if [ ! -z "$(git status -s --untracked-files=no $filesToWatch)" ]; then
 	echo "Aborting, please commit the changes first"
