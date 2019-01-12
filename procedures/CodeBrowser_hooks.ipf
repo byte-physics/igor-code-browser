@@ -67,6 +67,7 @@ Function initializePanel()
 	updatePanel()
 
 	setGlobalStr("search", getGlobalStr("search"))
+	setGlobalStr("procFilter", getGlobalStr("procFilter"))
 End
 
 // Prepare for panel closing.
@@ -114,11 +115,13 @@ Function KillPanelObjects()
 
 	// reset
 	setGlobalStr("search","")
+	setGlobalStr("procFilter", "")
 	setGlobalVar("initialized", 0)
 
 	// kill
 	KillWaves/Z decl, line, proc, help
 	killGlobalStr("search")
+	killGlobalStr("procFilter")
 	killGlobalVar("initialized")
 End
 

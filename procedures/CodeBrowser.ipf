@@ -1231,7 +1231,13 @@ End
 
 // Returns a list of all procedures windows in ProcGlobal context
 Function/S getGlobalProcWindows()
-	string procList = getProcWindows("*","INDEPENDENTMODULE:0")
+	string filter, procList
+
+	filter = getGlobalStr("procFilter")
+	if(!cmpstr(filter, ""))
+		filter = "*"
+	endif
+	procList = getProcWindows(filter,"INDEPENDENTMODULE:0")
 
 	return AddToItemsInList(procList, suffix=" [ProcGlobal]")
 End
@@ -1240,8 +1246,13 @@ End
 Function/S getIMProcWindows(moduleName)
 	string moduleName
 
-	string regexp
-	sprintf regexp, "* [%s]", moduleName
+	string regexp, filter
+
+	filter = getGlobalStr("procFilter")
+	if(!cmpstr(filter, ""))
+		filter = "*"
+	endif
+	sprintf regexp, "%s [%s]", filter, moduleName
 	return 	getProcWindows(regexp, "INDEPENDENTMODULE:1")
 End
 
