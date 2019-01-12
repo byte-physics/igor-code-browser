@@ -109,6 +109,7 @@ End
 Function KillPanelObjects()
 	Wave/T decl = getDeclWave()
 	Wave/I line = getLineWave()
+	Wave/T proc = getProcWave()
 	Wave/T help = getHelpWave()
 
 	// reset
@@ -116,7 +117,7 @@ Function KillPanelObjects()
 	setGlobalVar("initialized", 0)
 
 	// kill
-	KillWaves/Z decl, line, help
+	KillWaves/Z decl, line, proc, help
 	killGlobalStr("search")
 	killGlobalVar("initialized")
 End

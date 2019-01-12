@@ -43,6 +43,8 @@ StrConstant declarations      = "declarations"
 StrConstant helpWave          = "help"
 // 1D Wave in each row having the line of the function or -1 for macros
 StrConstant declarationLines  = "lines"
+// 1D Wave in each row having the procedure id for the corresponing element in lines
+StrConstant procedureWave     = "procs"
 // database-like global multidimensional waves for storing parsing results to minimize time.
 static StrConstant CsaveStrings 	= "saveStrings"
 static Strconstant CSaveVariables 	= "saveVariables"
@@ -51,6 +53,8 @@ static StrConstant CsaveWaves 		= "saveWaves"
 static Constant CsaveMaximum = 1024
 
 Constant    openKey           = 46 // ".", the dot
+
+StrConstant CB_selectAll = "<ALL>"
 
 // List of igor7 structure elements.
 static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
@@ -637,18 +641,18 @@ Function/S getVariableName(strDefinition)
 	return	 strVariableName
 End
 
-static Function resetLists(decls, lines, helps)
+static Function resetLists(decls, lines, procs, helps)
 	Wave/T decls
 	Wave/D lines
-	Wave/T helps
-	Redimension/N=(0, -1) decls, lines, helps
+	Wave/T procs, helps
+	Redimension/N=(0, -1) decls, lines, procs, helps
 End
 
 // @todo IgorPro >= 7 supports SortColumns
-static Function sortListByLineNumber(decls, lines, helps)
+static Function sortListByLineNumber(decls, lines, procs, helps)
 	Wave/T decls
 	Wave/D lines
-	Wave/T helps
+	Wave/T procs, helps
 
 	// check if sort is necessary
 	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
@@ -659,7 +663,7 @@ static Function sortListByLineNumber(decls, lines, helps)
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Duplicate/T/FREE/R=[][0] helps, helpCol0
 	Duplicate/T/FREE/R=[][1] helps, helpCol1
-	Sort/A lines, lines, declCol0, declCol1, helpCol0, helpCol1
+	Sort/A {procs, lines}, lines, procs, declCol0, declCol1, helpCol0, helpCol1
 	decls[][0] = declCol0[p][0]
 	decls[][1] = declCol1[p][0]
 	helps[][0] = helpCol0[p][0]
@@ -667,10 +671,10 @@ static Function sortListByLineNumber(decls, lines, helps)
 End
 
 // @todo IgorPro >= 7 supports SortColumns
-static Function sortListByName(decls, lines, helps)
+static Function sortListByName(decls, lines, procs, helps)
 	Wave/T decls
 	Wave/D lines
-	Wave/T helps
+	Wave/T procs, helps
 
 	// check if sort is necessary
 	if(Dimsize(decls, 0) * Dimsize(lines, 0) == 0)
@@ -681,7 +685,7 @@ static Function sortListByName(decls, lines, helps)
 	Duplicate/T/FREE/R=[][1] decls, declCol1
 	Duplicate/T/FREE/R=[][0] helps, helpCol0
 	Duplicate/T/FREE/R=[][1] helps, helpCol1
-	Sort/A declCol1, lines, declCol0, declCol1, helpCol0, helpCol1
+	Sort/A declCol1, lines, procs, declCol0, declCol1, helpCol0, helpCol1
 	decls[][0] = declCol0[p][0]
 	decls[][1] = declCol1[p][0]
 	helps[][0] = helpCol0[p][0]
@@ -706,10 +710,11 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 	// load global lists
 	Wave/T decls = getDeclWave()
 	Wave/I lines = getLineWave()
+	Wave/T procs = getProcWave()
 	Wave/T helps = getHelpWave()
 
 	// scan and add elements to lists
-	resetLists(decls, lines, helps)
+	resetLists(decls, lines, procs, helps)
 	addDecoratedFunctions(procedure.module, procedure.fullName, decls, lines)
 
 	WAVE/T procContent = getProcedureTextAsWave(procedure.module, procedure.fullName)
@@ -1070,56 +1075,102 @@ End
 
 // Returns 1 if the procedure file has content which we can show, 0 otherwise
 Function updateListBoxHook()
-	STRUCT procedure procedure
-	Variable returnState
 
 	String searchString = ""
 
 	// load global lists (for sort)
 	Wave/T decls = getDeclWave()
 	Wave/I lines = getLineWave()
+	Wave/T procs = getProcWave()
 	Wave/T helps = getHelpWave()
 
-	// get procedure information
-	procedure.fullName = getCurrentItem(procedure = 1)
-	procedure.name     = ProcedureWithoutModule(procedure.fullName)
-	procedure.module   = ModuleWithoutProcedure(procedure.fullName)
-	procedure.id       = procedure.module + "#" + RemoveEverythingAfter(procedure.name, ".ipf")
-	procedure.row      = getSaveRow(procedure.id)
-
-	// load procedure
-	returnState = saveLoad(procedure)
-	if(returnState < 0)
-		debugPrint("parsing Procedure")
-		parseProcedure(procedure)
-		// return state -2 means checksum already calculated and stored in global variable.
-		if(!(returnState == -2))
-			setCheckSum(procedure)
-		endif
-		// save information in "database"
-		saveResults(procedure)
-	endif
+	loadProcedures(getCurrentItem(procedure = 1))
 
 	// check if search is necessary
 	searchString = getGlobalStr("search")
 	if(strlen(searchString) > 0)
-		searchAndDelete(decls, lines, helps, searchString)
+		searchAndDelete(decls, lines, procs, helps, searchString)
 	endif
 
 	// switch sort type
 	if(returnCheckBoxSort())
-		sortListByName(decls, lines, helps)
+		sortListByName(decls, lines, procs, helps)
 	else
-		sortListByLineNumber(decls, lines, helps)
+		sortListByLineNumber(decls, lines, procs, helps)
 	endif
 
 	return DimSize(decls, 0)
 End
 
-Function searchAndDelete(decls, lines, helps, searchString)
+/// @brief load procedure(s)
+///
+/// @see generateProcedureList
+///
+/// @param fullName Procedure identifier from procList
+Function loadProcedures(fullName)
+	string fullName
+
+	variable returnState, i, numProcedures, oldDecls, numDecls
+	STRUCT procedure procedure
+	string procList = "", niceList = ""
+
+	WAVE/T decls = getDeclWave()
+	WAVE/I lines = getLineWave()
+	Wave/T procs = getProcWave()
+	WAVE/T helps = getHelpWave()
+
+	Make/FREE/T/N=(1, 2) fullDecls
+	Make/FREE/I/N=(1, 1) fullLines
+	Make/FREE/T/N=(1, 1) fullProcs
+	Make/FREE/T/N=(1, 2) fullHelps
+
+	procList = fullName
+	if(!cmpstr(fullName, CB_selectAll))
+		procList = ""
+		getProcedureList(procList, niceList)
+	endif
+
+	numProcedures = ItemsInList(procList)
+	numDecls = 0
+	for(i = 0; i < numProcedures; i += 1)
+		procedure.fullName = StringFromList(i, procList)
+		procedure.name     = ProcedureWithoutModule(procedure.fullName)
+		procedure.module   = ModuleWithoutProcedure(procedure.fullName)
+		procedure.id       = procedure.module + "#" + RemoveEverythingAfter(procedure.name, ".ipf")
+		procedure.row      = getSaveRow(procedure.id)
+
+		returnState = saveLoad(procedure)
+		if(returnState < 0)
+			debugPrint("parsing Procedure")
+			parseProcedure(procedure)
+			if(!(returnState == -2)) // checksum stored in global variable.
+				setCheckSum(procedure)
+			endif
+			saveResults(procedure)
+		endif
+
+		oldDecls = numDecls
+		numDecls += DimSize(decls, 0)
+		if(oldDecls == numDecls)
+			continue
+		endif
+		Redimension/N=(numDecls, -1) fullDecls, fullLines, fullProcs, fullHelps
+		fullDecls[oldDecls, numDecls - 1] = decls[p - oldDecls]
+		fullLines[oldDecls, numDecls - 1] = lines[p - oldDecls]
+		fullProcs[oldDecls, numDecls - 1] = procedure.fullName
+		fullHelps[oldDecls, numDecls - 1] = helps[p - oldDecls]
+	endfor
+
+	Duplicate/O/T fullDecls decls
+	Duplicate/O/I fullLines lines
+	Duplicate/O/T fullHelps helps
+	Duplicate/O/T fullProcs procs
+End
+
+Function searchAndDelete(decls, lines, procs, helps, searchString)
 	Wave/T decls
 	Wave/I lines
-	Wave/T helps
+	Wave/T procs, helps
 	String searchString
 
 	Variable i, numEntries
@@ -1131,16 +1182,16 @@ Function searchAndDelete(decls, lines, helps, searchString)
 
 	for(i = numEntries - 1; i > 0; i -= 1)
 		if(strsearch(decls[i][1], searchString, 0, 2) == -1)
-			DeletePoints/M=0 i, 1, decls, lines, helps
+			DeletePoints/M=0 i, 1, decls, lines, procs, helps
 		endif
 	endfor
 
 	// prevent loss of dimension if no match was found at all.
 	if(strsearch(decls[0][1], searchString, 0, 2) == -1)
 		if(Dimsize(decls, 0) == 1)
-			Redimension/N=(0, -1) decls, lines, helps
+			Redimension/N=(0, -1) decls, lines, procs, helps
 		else
-			DeletePoints/M=0 i, 1, decls, lines, helps
+			DeletePoints/M=0 i, 1, decls, lines, procs, helps
 		endif
 	endif
 End
@@ -1155,24 +1206,22 @@ Function DeletePKGfolder()
 End
 
 // Shows the line/function for the function/macro with the given index into decl
-// With no index just the procedure file is shown
-Function showCode(procedure, [index])
-	string procedure
+Function showCode(index)
 	variable index
 
-	if(ParamIsDefault(index))
-		DisplayProcedure/W=$procedure
-		return NaN
-	endif
+	string procedure
 
 	Wave/T decl  = getDeclWave()
 	Wave/I lines = getLineWave()
+	Wave/T procs = getProcWave()
 
 	if(!(index >= 0) || index >= DimSize(decl, 0) || index >= DimSize(lines, 0))
 		Abort "Index out of range"
 	endif
 
+	procedure = procs[index]
 	if(lines[index] < 0)
+		debugPrint("No line definition found for selected item.")
 		string func = getShortFuncOrMacroName(decl[index][1])
 		DisplayProcedure/W=$procedure func
 	else
@@ -1254,6 +1303,22 @@ Function/Wave getLineWave()
 
 	if(!WaveExists(wv))
 		Make/I dfr:$declarationLines/Wave=wv
+	endif
+
+	return wv
+End
+
+/// @brief Get a wave which holds the procedures' full name
+///
+/// @see getLineWave
+///
+/// @returns 1D Wave having the procedure fullname in each row.
+Function/Wave getProcWave()
+	DFREF dfr = createDFWithAllParents(pkgFolder)
+	WAVE/Z/T/SDFR=dfr wv = $procedureWave
+
+	if(!WaveExists(wv))
+		Make/T dfr:$procedureWave/Wave=wv
 	endif
 
 	return wv

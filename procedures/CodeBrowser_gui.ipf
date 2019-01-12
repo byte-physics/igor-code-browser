@@ -28,9 +28,7 @@ static StrConstant userDataNiceList = "niceList"
 
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
-static StrConstant selectAll = "<ALL>"
 static StrConstant genericError = "_error_"
-
 Function/S GetPanel()
 	return panel
 End
@@ -144,7 +142,7 @@ Function/S generateModuleList()
 	debugPrint("called")
 
 	string niceList = getModuleList()
-	niceList = AddListItem(selectAll, niceList)
+	niceList = AddListItem(CB_selectAll, niceList)
 
 	PopupMenu $moduleCtrl, win=$panel, userData($userDataNiceList)=niceList
 
@@ -154,13 +152,30 @@ End
 // Callback for the procedure popup, returns a nicified list
 // Stores both the nicified list and the raw list as user data
 Function/S generateProcedureList()
-	string module, modules, procList, niceList
+	string procList, niceList
+
+	procList = AddListItem(CB_selectAll, "")
+	niceList = AddListItem(CB_selectAll, "")
+
+	getProcedureList(procList, niceList)
+	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
+
+	return niceList
+End
+
+/// @brief get a list of all procedures from the currently selected module
+///
+/// @param[in]  module   select a valid module or CB_selectAll
+/// @param[out] procList list of procedures with unique items
+/// @param[out] niceList list of procedures for display (without module)
+Function getProcedureList(procList, niceList)
+	string &procList, &niceList
+
+	string module, modules
 	variable numModules, i
 
 	module = getCurrentItem(module = 1)
-	if(!cmpstr(module, selectAll))
-		procList = ""
-		niceList = ""
+	if(!cmpstr(module, CB_selectAll))
 		modules = getModuleList()
 		numModules = ItemsInList(modules)
 		for(i = 0; i < numModules; i += 1)
@@ -173,15 +188,12 @@ Function/S generateProcedureList()
 			endif
 		endfor
 	else
-		procList = getProcList(module)
-		niceList = procList
+		procList += getProcList(module)
+		niceList += procList[strlen(CB_selectAll) + 1, inf]
 	endif
+
 	niceList = ProcedureListRemoveModule(niceList)
 	niceList = ProcedureListRemoveEnding(niceList)
-
-	PopupMenu $procCtrl, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
-
-	return niceList
 End
 
 // Must be called after every change which might affect the panel contents
@@ -400,6 +412,8 @@ End
 Function popupModules(pa) : PopupMenuControl
 	STRUCT WMPopupAction &pa
 
+	string procedure
+
 	switch(pa.eventCode)
 		case 2: // mouse up
 			debugprint("mouse up")
@@ -413,7 +427,10 @@ Function popupModules(pa) : PopupMenuControl
 			updatePopup(procCtrl)
 
 			if(updateListBoxHook() == 0)
-				showCode(getCurrentItem(procedure=1))
+				procedure = getCurrentItem(procedure = 1)
+				if(!!cmpstr(procedure, CB_selectAll))
+					DisplayProcedure/W=$procedure
+				endif
 			endif
 			break
 	endswitch
@@ -435,7 +452,9 @@ Function popupProcedures(pa) : PopupMenuControl
 			endif
 
 			if(updateListBoxHook() == 0)
-				showCode(getCurrentItem(procedure=1))
+				if(!!cmpstr(procedure, CB_selectAll))
+					DisplayProcedure/W=$procedure
+				endif
 			endif
 			break
 	endswitch
@@ -507,8 +526,7 @@ Function listBoxProc(lba) : ListBoxControl
 				return 0
 			endif
 
-			procedure = getCurrentItem(procedure=1)
-			showCode(procedure, index=row)
+			showCode(row)
 			break
 		case 4: // cell selection
 		case 5: // cell selection plus shift key
@@ -526,7 +544,7 @@ Function listBoxProc(lba) : ListBoxControl
 			if(row == openkey)
 				procedure = getCurrentItem(procedure=1)
 				variable listIndex = str2num(getCurrentItem(index=1))
-				showCode(procedure,index=listIndex)
+				showCode(listIndex)
 			endif
 			break
 		case 13: // checkbox clicked (Igor 6.2 or later)
