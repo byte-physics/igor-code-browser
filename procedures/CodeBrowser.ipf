@@ -373,8 +373,8 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 End
 
 // Adds Constants/StrConstants by searching for them in the Procedure with a Regular Expression
-Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWave)
-	String module, procedureWithoutModule
+Function addDecoratedConstants(text, declWave, lineWave)
+	WAVE/T text
 	WAVE/T declWave
 	WAVE/D lineWave
 
@@ -383,12 +383,6 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 
 	Wave/T helpWave = getHelpWave()
 
-	// get procedure code
-	procText = getProcedureText("", 0, module, procedureWithoutModule)
-	numLines = ItemsInList(procText, "\r")
-
-	// search code and return wavLineNumber
-	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// help for regex on https://regex101.com/
 	re = "^(?i)[[:space:]]*((?:override\s+)?(?:static)?[[:space:]]*(?:Str)?Constant)[[:space:]]+([^=\s]*)\s*=\s*(?:\"(?:[^\"\\\\]|\\\\.)+\"|0[xX][0-9a-fA-F]+|[0-9]+)\s*(?:[\/]{2}.*)?"
 	Grep/Q/INDX/E=re text
@@ -418,8 +412,8 @@ Function addDecoratedConstants(module, procedureWithoutModule, declWave, lineWav
 	KillWaves/Z W_Index
 End
 
-Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
-	String module, procedureWithoutModule
+Function addDecoratedMacros(text, declWave, lineWave)
+	WAVE/T text
 	WAVE/T declWave
 	WAVE/D lineWave
 
@@ -428,12 +422,6 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 
 	Wave/T helpWave = getHelpWave()
 
-	// get procedure code
-	procText = getProcedureText("", 0, module, procedureWithoutModule)
-	numLines = ItemsInList(procText, "\r")
-
-	// search code and return wavLineNumber
-	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// regexp: match case insensitive (?i) spaces don't matter. search for window or macro or proc. Macro Name is the the next non-space character followed by brackets () where the arguments are. At the end there might be a colon, specifying the type of macro and a comment beginning with /
 	// macro should have no arguments. Handled for backwards compatibility.
 	// help for regex on https://regex101.com/
@@ -462,8 +450,8 @@ Function addDecoratedMacros(module, procedureWithoutModule, declWave, lineWave)
 	endfor
 End
 
-Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWave, [parseVariables])
-	String module, procedureWithoutModule
+Function addDecoratedStructure(text, declWave, lineWave, [parseVariables])
+	WAVE/T text
 	WAVE/T declWave
 	WAVE/D lineWave
 	Variable parseVariables
@@ -476,15 +464,6 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 
 	Wave/T helpWave = getHelpWave()
 
-	// get procedure code
-	procText = getProcedureText("", 0, module, procedureWithoutModule)
-	numLines = ItemsInList(procText, "\r")
-	if(numLines == 0)
-		debugPrint("no Content in Procedure " + procedureWithoutModule)
-	endif
-
-	// search code and return wavLineNumber
-	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// regexp: match case insensitive (?i) leading spaces don't matter. optional static statement. search for structure name which contains no spaces. followed by an optional space and nearly anything like inline comments
 	// help for regex on https://regex101.com/
 	reStart = "^(?i)[[:space:]]*((?:static[[:space:]])?)[[:space:]]*structure[[:space:]]+([^[:space:]\/]+)[[:space:]\/]?.*"
@@ -537,8 +516,8 @@ Function addDecoratedStructure(module, procedureWithoutModule, declWave, lineWav
 	WaveClear wavStructureStart, wavStructureEnd
 End
 
-Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
-	String module, procedureWithoutModule
+Function addDecoratedMenu(text, declWave, lineWave)
+	WAVE/T text
 	WAVE/T declWave
 	WAVE/D lineWave
 
@@ -548,12 +527,6 @@ Function addDecoratedMenu(module, procedureWithoutModule, declWave, lineWave)
 
 	Wave/T helpWave = getHelpWave()
 
-	// get procedure code
-	procText = getProcedureText("", 0, module, procedureWithoutModule)
-	numLines = ItemsInList(procText, "\r")
-
-	// search code and return wavLineNumber
-	Make/FREE/N=(numLines)/T text = StringFromList(p, procText, "\r")
 	// regexp: match case insensitive (?i) spaces don't matter. search for menu or submenu with a name in double quotes.
 	// help for regex on https://regex101.com/
 	re = "^(?i)[[:space:]]*(menu|submenu)[[:space:]]+\"((?:[^\"\\\\]|\\\\.)+)\"(?:[[:space:]]*[,][[:space:]]*(hideable|dynamic|contextualmenu))?"
@@ -738,13 +711,40 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 	// scan and add elements to lists
 	resetLists(decls, lines, helps)
 	addDecoratedFunctions(procedure.module, procedure.fullName, decls, lines)
-	addDecoratedConstants(procedure.module, procedure.name, decls, lines)
-	addDecoratedMacros(procedure.module, procedure.name, decls, lines)
-	addDecoratedStructure(procedure.module, procedure.name, decls, lines)
-	addDecoratedMenu(procedure.module, procedure.name, decls, lines)
+
+	WAVE/T procContent = getProcedureTextAsWave(procedure.module, procedure.fullName)
+	addDecoratedConstants(procContent, decls, lines)
+	addDecoratedMacros(procContent, decls, lines)
+	addDecoratedStructure(procContent, decls, lines)
+	addDecoratedMenu(procContent, decls, lines)
 
 	// stop timer
 	setParsingTime(timerStop(timer))
+End
+
+/// @brief Return the text of the given procedure as free wave splitted at the EOL
+static Function/WAVE getProcedureTextAsWave(module, procedureWithoutModule)
+	string module, procedureWithoutModule
+
+	string procText
+	variable numLines
+
+	// get procedure code
+	procText = getProcedureText("", 0, module, procedureWithoutModule)
+
+#if (IgorVersion() >= 7.0)
+	return ListToTextWave(procText, "\r")
+#else
+	numLines = ItemsInList(procText, "\r")
+
+	if(numLines == 0)
+		Make/FREE/N=(numLines)/T wv
+		return wv
+	endif
+
+	Make/FREE/N=(numLines)/T wv = StringFromList(p, procText, "\r")
+	return wv
+#endif
 End
 
 // Identifier = module#procedure
