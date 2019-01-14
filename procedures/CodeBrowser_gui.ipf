@@ -29,6 +29,7 @@ static StrConstant userDataNiceList = "niceList"
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
 static StrConstant selectAll = "<ALL>"
+static StrConstant genericError = "_error_"
 
 Function/S GetPanel()
 	return panel
@@ -253,7 +254,7 @@ Function/S getCurrentItem([module, procedure, index])
 
 	// only one optional argument allowed
 	if(module + procedure + index != 1)
-		return "_error_"
+		return genericError
 	endif
 
 	if(module)
@@ -278,14 +279,14 @@ Function/S getCurrentItem([module, procedure, index])
 				// fall back to first item
 				return StringFromList(0, rawList)
 			endif
-			return "_error_"
+			return genericError
 		endif
 
 		procName = StringFromList(V_Value, rawList)
 		return procName
 	endif
 
-	return "_error_"
+	return genericError
 End
 
 /// Get the basic procedure name from a full procedure name
