@@ -274,6 +274,10 @@ Function/S getCurrentItem([module, procedure, index])
 
 		rawList = GetUserData(panel, procCtrl, userDataRawList)
 		if(V_Value < 0 || V_Value >= ItemsInList(rawList))
+			if(ItemsInList(rawList) > 0)
+				// fall back to first item
+				return StringFromList(0, rawList)
+			endif
 			return "_error_"
 		endif
 
