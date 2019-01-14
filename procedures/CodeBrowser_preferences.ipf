@@ -6,7 +6,7 @@
 // This file was created by () byte physics Thomas Braun, support@byte-physics.de
 // (c) 2013
 
-static Constant kPrefsVersion = 107
+static Constant kPrefsVersion = 108
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
@@ -21,7 +21,8 @@ Structure CodeBrowserPrefs
 	uint32 panelTopElement // top element in listbox (scrolling)
 	uint32 configCleanOnExit // delete CodeBrowser related data when CodeBrowser exits
 	uint32 configDebuggingEnabled // enable messages for debugging purpose
-	uint32 reserved[93]	// Reserved for future use
+	char   procFilter[40] // procedure filter
+	uint32 reserved[83]	// Reserved for future use
 EndStructure
 
 //	DefaultPackagePrefsStruct(prefs)
@@ -29,6 +30,8 @@ EndStructure
 static Function DefaultPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 	Variable scale
+
+	Variable i
 
 	prefs.version = kPrefsVersion
 
@@ -52,8 +55,9 @@ static Function DefaultPackagePrefsStruct(prefs)
 	prefs.configCleanOnExit = 1
 	prefs.configDebuggingEnabled = 0
 
-	Variable i
-	for(i=0; i<93; i+=1)
+	prefs.procFilter = "*"
+
+	for(i = 0; i < 83; i += 1)
 		prefs.reserved[i] = 0
 	endfor
 End
@@ -96,6 +100,8 @@ static Function SyncPackagePrefsStruct(prefs)
 
 	configItem = getGlobalVar("debuggingEnabled")
 	prefs.configDebuggingEnabled = configItem < 0 ? 0 : configItem
+
+	prefs.procFilter = getGlobalStr("procFilter")
 End
 
 // InitPackagePrefsStruct(prefs)
@@ -137,10 +143,15 @@ Function LoadPackagePrefsFromDisk(prefs)
 
 	setGlobalVar("cleanOnExit", prefs.configCleanOnExit)
 	setGlobalVar("debuggingEnabled", prefs.configDebuggingEnabled)
+
+	setGlobalStr("procFilter", prefs.procFilter)
 End
 
 Function SavePackagePrefsToDisk(prefs)
 	STRUCT CodeBrowserPrefs &prefs
+
+	String procFilter = prefs.procFilter
+	prefs.procFilter = procFilter[0, 19]
 
 	SavePackagePreferences kPackageName, kPrefsFileName, kPrefsRecordID, prefs
 End

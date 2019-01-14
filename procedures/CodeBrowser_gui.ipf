@@ -47,7 +47,7 @@ Function createPanel()
 	DefineGuide/W=$panel UGHL={FL,panelBorder}
 	DefineGuide/W=$panel UGHR={FR,panelBorder}
 
-	setGlobalStr("procFilter", getGlobalStr("procFilter"))
+	setGlobalStr("procFilter", prefs.procFilter)
 	setGlobalStr("search", getGlobalStr("search"))
 	CodeBrowserPanel()
 	ListBox list1, win = $panel, listWave=getDeclWave()
