@@ -477,7 +477,6 @@ Function searchSet(sva) : SetVariableControl
 		case 3: // Live update
 			Variable dval = sva.dval
 			String sval = sva.sval
-			setGlobalStr("search", sval)
 			updateListBoxHook()
 			break
 		case -1: // control being killed
