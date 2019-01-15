@@ -75,7 +75,7 @@ Function CodeBrowserPanel()
 	SetVariable setProcedureFilter,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
 	SetVariable setProcedureFilter,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	SetVariable setSearch,pos={125,81},size={175.00,18.00},proc=CodeBrowserModule#searchSet,title="search"
+	SetVariable setSearch,pos={125,81},size={175.00,18.00},proc=CodeBrowserModule#SetVarProcedureSearch,title="search"
 	SetVariable setSearch,limits={-inf,inf,0},value= root:Packages:CodeBrowser:search,live= 1
 	SetVariable setSearch,userdata(ResizeControlsInfo)= A"!!,F_!!#?[!!#A>!!#<Hz!!#](Aon#azzzzzzzzzzzzzz!!#o2B4uAezz"
 	SetVariable setSearch,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
@@ -488,7 +488,8 @@ Function returnCheckBoxSort()
 	endif
 End
 
-Function searchSet(sva) : SetVariableControl
+/// @brief Action procedure for the SetVariable @c setSearch
+Function SetVarProcedureSearch(sva) : SetVariableControl
 	STRUCT WMSetVariableAction &sva
 
 	switch( sva.eventCode )
