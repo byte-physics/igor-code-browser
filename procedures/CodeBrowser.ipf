@@ -328,8 +328,8 @@ Function/S formatDecl(funcOrMacro, params, subtypeTag, returnType)
 End
 
 // Adds all kind of information to a list of function in current procedure
-Function addDecoratedFunctions(module, procedure, declWave, lineWave)
-	string module, procedure
+Function addDecoratedFunctions(procedure, declWave, lineWave)
+	STRUCT procedure &procedure
 	Wave/T declWave
 	Wave/D lineWave
 
@@ -341,7 +341,7 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 	Wave/T helpWave = getHelpWave()
 
 	// list normal, userdefined, override and static functions
-	options  = "KIND:18,WIN:" + procedure
+	options  = "KIND:18,WIN:" + procedure.fullname
 	funcList = FunctionList("*", ";", options)
 	numMatches = ItemsInList(funcList)
 	numEntries = DimSize(declWave, 0)
@@ -350,12 +350,12 @@ Function addDecoratedFunctions(module, procedure, declWave, lineWave)
 	idx = numEntries
 	for(i = 0; i < numMatches; i += 1)
 		func = StringFromList(i, funcList)
-		fi = FunctionInfo(module + "#" + func, procedure)
+		fi = FunctionInfo(procedure.module + "#" + func, procedure.name)
 		if(!cmpstr(func, "Procedures Not Compiled"))
 			fi = ReplaceNumberByKey("PROCLINE", fi, 0)
 		endif
 		if(isEmpty(fi))
-			debugPrint("macro or other error for " + module + "#" + func)
+			debugPrint("macro or other error for " + procedure.module + "#" + func)
 		endif
 		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi), 0, fi)
 		threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
@@ -715,7 +715,7 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 
 	// scan and add elements to lists
 	resetLists(decls, lines, procs, helps)
-	addDecoratedFunctions(procedure.module, procedure.fullName, decls, lines)
+	addDecoratedFunctions(procedure, decls, lines)
 
 	WAVE/T procContent = getProcedureTextAsWave(procedure.module, procedure.fullName)
 	addDecoratedConstants(procContent, decls, lines)
