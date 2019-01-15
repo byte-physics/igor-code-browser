@@ -48,7 +48,8 @@ Function createPanel()
 	DefineGuide/W=$panel UGHR={FR,panelBorder}
 
 	setGlobalStr("procFilter", prefs.procFilter)
-	setGlobalStr("search", getGlobalStr("search"))
+	setGlobalStr("search", prefs.search)
+
 	CodeBrowserPanel()
 	ListBox list1, win = $panel, listWave=getDeclWave()
 #if (IgorVersion() >= 8.00)
