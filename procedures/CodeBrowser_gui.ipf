@@ -46,7 +46,8 @@ Function createPanel()
 	endif
 
 	// define position
-	NewPanel/N=$panel /K=1/W=(panelLeft,panelTop,panelLeft+panelWidth,panelTop+panelHeight) // left,top,right,bottom
+	NewPanel/FLT=1/N=$panel /K=1/W=(panelLeft,panelTop,panelLeft+panelWidth,panelTop+panelHeight) // left,top,right,bottom
+	ModifyPanel/W=$panel fixedSize=0
 	String module = GetIndependentModuleName()
 
 	PopupMenu $moduleCtrl, win=$panel,pos={0,moduleCtrlTop}, size={panelWidth-2*panelBorder,20}, bodywidth=200
@@ -114,6 +115,8 @@ Function createPanel()
 	SetWindow $panel ,userdata(oneTimeInit)=  "1"
 	SetWindow $panel ,userdata(ResizeControlsInfoUGHL)= A":-hTC3`S[@9KQ<I:-(a\\A7\\)JDg-86E][6':dmEFF(KAR85E,T>#.mm5tj<n4&A^O8Q88W:-(6b0JGRY<CoSI0fhct4%E:B6q&jl4&SL@:et\"]<(Tk\\3]/u"
 	SetWindow $panel ,userdata(ResizeControlsInfoUGHR)= A":-hTC3`S[@;EIrO:-(a\\A7\\)JDg-86E][6':dmEFF(KAR85E,T>#.mm5tj<n4&A^O8Q88W:-(0b2_Hd<4%E:B6q&gk7T)<<<CoSI1-.Kp78-NR;b9q[:JNr.3r"
+
+	SetActiveSubwindow _endfloat_
 
 	resizeToPackagePrefs()
 	DoUpdate/W=$panel
