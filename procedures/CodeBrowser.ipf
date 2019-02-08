@@ -717,7 +717,7 @@ Function/S parseProcedure(procedure, [checksumIsCalculated])
 	resetLists(decls, lines, procs, helps)
 	addDecoratedFunctions(procedure, decls, lines)
 
-	WAVE/T procContent = getProcedureTextAsWave(procedure.module, procedure.fullName)
+	WAVE/T procContent = getProcedureTextAsWave(procedure.module, procedure.name)
 	addDecoratedConstants(procContent, decls, lines)
 	addDecoratedMacros(procContent, decls, lines)
 	addDecoratedStructure(procContent, decls, lines)
