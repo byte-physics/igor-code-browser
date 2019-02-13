@@ -1,5 +1,5 @@
 #pragma rtGlobals=3
-#pragma version=1.0
+#pragma version=1.3
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 

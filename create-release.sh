@@ -2,7 +2,7 @@
 
 set -e
 
-newVersion=1.1
+newVersion=1.3
 
 filesToWatch="procedures README.md LICENSE"
 

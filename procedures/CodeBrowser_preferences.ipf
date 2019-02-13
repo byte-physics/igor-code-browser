@@ -1,5 +1,5 @@
 #pragma rtGlobals=3
-#pragma version=1.0
+#pragma version=1.3
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 
@@ -9,7 +9,7 @@
 // This source code is licensed under the BSD 3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
-static Constant kPrefsVersion = 109
+static Constant kPrefsVersion = 130
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
