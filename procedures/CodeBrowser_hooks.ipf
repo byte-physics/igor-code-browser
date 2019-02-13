@@ -134,22 +134,22 @@ Function panelHook(s)
 	Variable hookResult = 0
 
 	switch(s.eventCode)
-		case 0:				// activate
+		case 0: // activate
 			if(isInitialized())
 				break
 			endif
 			initializePanel()
 			markAsInitialized()
 			break
-		case 2:				// kill
+		case 2: // kill
 			BeforePanelClose()
 			AfterPanelClose()
 			hookResult = 1
 			break
-		case 6:				// resize
+		case 6: // resize
 			hookResult = ResizeControls#ResizeControlsHook(s)
 			break
 	endswitch
 
-	return hookResult		// 0 if nothing done, else 1
+	return hookResult // 0 if nothing done, else 1
 End

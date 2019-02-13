@@ -28,6 +28,7 @@ static StrConstant userDataNiceList = "niceList"
 static StrConstant oneTimeInitUserData = "oneTimeInit"
 
 static StrConstant genericError = "_error_"
+
 Function/S GetPanel()
 	return panel
 End

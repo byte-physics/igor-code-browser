@@ -15,22 +15,21 @@ static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
 
 Structure CodeBrowserPrefs
-	uint32	version		// Preferences structure version number. 100 means 1.00.
-	double panelCoords[4]	// left, top, right, bottom
-	uint32 panelCheckboxSort 	// status of checkbox in createPanel()
-	uint32 panelNameSpace	// last marked namespace in panel
-	uint32 panelProcedure	// last marked procedure in panel
-	uint32 panelElement	// last marked element in panel
-	uint32 panelTopElement // top element in listbox (scrolling)
-	uint32 configCleanOnExit // delete CodeBrowser related data when CodeBrowser exits
+	uint32 version                // Preferences structure version number. 100 means 1.00.
+	double panelCoords[4]         // left, top, right, bottom
+	uint32 panelCheckboxSort      // status of checkbox in createPanel()
+	uint32 panelNameSpace         // last marked namespace in panel
+	uint32 panelProcedure         // last marked procedure in panel
+	uint32 panelElement           // last marked element in panel
+	uint32 panelTopElement        // top element in listbox (scrolling)
+	uint32 configCleanOnExit      // delete CodeBrowser related data when CodeBrowser exits
 	uint32 configDebuggingEnabled // enable messages for debugging purpose
-	char   procFilter[40] // procedure filter
-	char   search[40] // search filter
-	uint32 reserved[73] // Reserved for future use
+	char   procFilter[40]         // procedure filter
+	char   search[40]             // search filter
+	uint32 reserved[73]           // Reserved for future use
 EndStructure
 
-//	DefaultPackagePrefsStruct(prefs)
-//	Sets prefs structure to default values.
+// Sets prefs structure to default values.
 static Function DefaultPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 	Variable scale
@@ -132,8 +131,8 @@ Function LoadPackagePrefsFromDisk(prefs)
 
 	// If error or prefs not found or not valid, initialize them.
 	if(V_flag != 0 || V_bytesRead == 0 || prefs.version != kPrefsVersion)
-		FillPackagePrefsStruct(prefs)	// Set based on panel if it exists or set to default values.
-		SavePackagePrefsToDisk(prefs)	// Create initial prefs record.
+		FillPackagePrefsStruct(prefs) // Set based on panel if it exists or set to default values.
+		SavePackagePrefsToDisk(prefs) // Create initial prefs record.
 	endif
 
 

@@ -49,9 +49,9 @@ StrConstant declarationLines  = "lines"
 // 1D Wave in each row having the procedure id for the corresponing element in lines
 StrConstant procedureWave     = "procs"
 // database-like global multidimensional waves for storing parsing results to minimize time.
-static StrConstant CsaveStrings 	= "saveStrings"
-static Strconstant CSaveVariables 	= "saveVariables"
-static StrConstant CsaveWaves 		= "saveWaves"
+static StrConstant CsaveStrings   = "saveStrings"
+static Strconstant CSaveVariables = "saveVariables"
+static StrConstant CsaveWaves     = "saveWaves"
 // Maximum Waves that will be saved in Experiment. first in first out.
 static Constant CsaveMaximum = 1024
 
@@ -764,8 +764,8 @@ static Function saveResults(procedure)
 	Wave/T helpWave = getHelpWave()
 
 	Wave/WAVE SaveWavesWave     = getSaveWaves()
-	Wave/T 	  SaveStringsWave   = getSaveStrings()
-	Wave      SaveVariablesWave	= getSaveVariables()
+	Wave/T    SaveStringsWave   = getSaveStrings()
+	Wave      SaveVariablesWave = getSaveVariables()
 
 	Variable endOfWave = Dimsize(SaveWavesWave, 0)
 
@@ -787,8 +787,8 @@ static Function saveResults(procedure)
 	Duplicate/FREE declWave myFreeDeclWave
 	Duplicate/FREE lineWave myFreeLineWave
 	Duplicate/FREE helpWave myFreeHelpWave
-	SaveStringsWave[procedure.row][0] 	= procedure.id
-	SaveStringsWave[procedure.row][1] 	= getChecksum()
+	SaveStringsWave[procedure.row][0] = procedure.id
+	SaveStringsWave[procedure.row][1] = getChecksum()
 	SaveWavesWave[procedure.row][0] = myFreeDeclWave
 	SaveWavesWave[procedure.row][1] = myFreeLineWave
 	SaveWavesWave[procedure.row][2] = myFreeHelpWave
@@ -823,7 +823,7 @@ static Function saveLoad(procedure)
 
 	Wave/WAVE SaveWavesWave     = getSaveWaves()
 	Wave/T    SaveStringsWave   = getSaveStrings()
-	Wave      SaveVariablesWave	= getSaveVariables()
+	Wave      SaveVariablesWave = getSaveVariables()
 
 	// if maximum storage capacity was reached (procedure.row == -1) or
 	// Element not found (procedure.row == endofWave) --> nothing loadable
@@ -905,8 +905,8 @@ static Function savePush()
 	MatrixOp/O SaveVariables = rotateRows(SaveVariables, (endofWave - 1))
 	// MatrixOP is strictly numeric (but fast)
 	for(i=0; i<endofWave;i+=1)
-		SaveWavesWave[i][]	= SaveWavesWave[(i + 1)][q]
-		SaveStrings[i][] 	= SaveStrings[(i + 1)][q]
+		SaveWavesWave[i][] = SaveWavesWave[(i + 1)][q]
+		SaveStrings[i][] = SaveStrings[(i + 1)][q]
 	endfor
 End
 
@@ -918,7 +918,8 @@ End
 // Kill all storage objects
 //
 // note: if objects are in use they can not be killed.
-// 		 therefore the function resets all variables before killing
+//       therefore the function resets all variables before killing
+//
 Function KillStorage()
 	Wave savedVariablesWave = getSaveVariables()
 	Wave/T SavedStringsWave = getSaveStrings()
@@ -1256,7 +1257,7 @@ Function/S getIMProcWindows(moduleName)
 		filter = "*"
 	endif
 	sprintf regexp, "%s [%s]", filter, moduleName
-	return 	getProcWindows(regexp, "INDEPENDENTMODULE:1")
+	return getProcWindows(regexp, "INDEPENDENTMODULE:1")
 End
 
 // Low level implementation, returns a sorted list of procedure windows matching regexp and options
