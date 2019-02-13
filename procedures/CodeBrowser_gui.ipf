@@ -51,14 +51,14 @@ Function createPanel()
 	setGlobalStr("search", prefs.search)
 
 	CodeBrowserPanel()
-	ListBox list1, win = $panel, listWave=getDeclWave()
+	ListBox List1, win = $panel, listWave=getDeclWave()
 #if (IgorVersion() >= 8.00)
-	ListBox list1, win = $panel, helpWave=getHelpWave()
+	ListBox List1, win = $panel, helpWave=getHelpWave()
 #endif
 
-	PopupMenu popupNamespace, win=$panel, mode=prefs.panelNameSpace
-	PopupMenu popupProcedure, win=$panel, mode=prefs.panelProcedure
-	ListBox list1, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
+	PopupMenu PopupNamespace, win=$panel, mode=prefs.panelNameSpace
+	PopupMenu PopupProcedure, win=$panel, mode=prefs.panelProcedure
+	ListBox List1, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
 
 	resizeToPackagePrefs()
 	DoUpdate/W=$panel
@@ -69,44 +69,50 @@ End
 ///
 /// Note that all functions act on the current top panel
 Function CodeBrowserPanel()
-	SetVariable setProcedureFilter,pos={72,33},size={229,18},proc=CodeBrowserModule#SetVarProcedureFilter,title="filter"
-	SetVariable setProcedureFilter,limits={-inf,inf,0},value= root:Packages:CodeBrowser:procFilter,live= 1
-	SetVariable setProcedureFilter,userdata(ResizeControlsInfo)= A"!!,EJ!!#=g!!#At!!#<Hz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
-	SetVariable setProcedureFilter,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
-	SetVariable setProcedureFilter,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	SetVariable SetProcedureFilter,pos={72,33},size={229,18},proc=CodeBrowserModule#SetVarProcedureFilter,title="filter"
+	SetVariable SetProcedureFilter,limits={-inf,inf,0},value= root:Packages:CodeBrowser:procFilter,live= 1
+	SetVariable SetProcedureFilter,help={"Filter procedures matching the specified filter pattern from the selected namespace context."}
+	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo)= A"!!,EJ!!#=g!!#At!!#<Hz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
+	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	SetVariable setSearch,pos={125,81},size={175.00,18.00},proc=CodeBrowserModule#SetVarProcedureSearch,title="search"
-	SetVariable setSearch,limits={-inf,inf,0},value= root:Packages:CodeBrowser:search,live= 1
-	SetVariable setSearch,userdata(ResizeControlsInfo)= A"!!,F_!!#?[!!#A>!!#<Hz!!#](Aon#azzzzzzzzzzzzzz!!#o2B4uAezz"
-	SetVariable setSearch,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
-	SetVariable setSearch,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	SetVariable SetSearch,pos={125,81},size={175.00,18.00},proc=CodeBrowserModule#SetVarProcedureSearch,title="search"
+	SetVariable SetSearch,limits={-inf,inf,0},value= root:Packages:CodeBrowser:search,live= 1
+	SetVariable SetSearch,help={"Search for elements in the list below. Search patterns will be automatically appended with leading and trailing wildcards."}
+	SetVariable SetSearch,userdata(ResizeControlsInfo)= A"!!,F_!!#?[!!#A>!!#<Hz!!#](Aon#azzzzzzzzzzzzzz!!#o2B4uAezz"
+	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
+	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	CheckBox checkboxSort,pos={77,83},size={36.00,15.00},proc=CodeBrowserModule#checkboxSort,title="sort"
-	CheckBox checkboxSort,value= 1
-	CheckBox checkboxSort,userdata(ResizeControlsInfo)= A"!!,ET!!#?_!!#=s!!#<(z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
-	CheckBox checkboxSort,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
-	CheckBox checkboxSort,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	CheckBox CheckboxSort,pos={77,83},size={36.00,15.00},proc=CodeBrowserModule#CheckboxSort,title="sort"
+	CheckBox CheckboxSort,value= 1
+	CheckBox CheckboxSort,help={"Sort results alphabetically. Uncheck to sort by line number."}
+	CheckBox CheckboxSort,userdata(ResizeControlsInfo)= A"!!,ET!!#?_!!#=s!!#<(z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
+	CheckBox CheckboxSort,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
+	CheckBox CheckboxSort,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	ListBox list1,pos={0.00,105.00},size={300,62},proc=CodeBrowserModule#ListBoxProc
-	ListBox list1,listWave=root:Packages:CodeBrowser:declarations
-	ListBox list1,selCol= 1,widths={4,40},keySelectCol= 1
-	ListBox list1,mode= 5,selRow= 0
-	ListBox list1,userdata(ResizeControlsInfo)= A"!!*'\"!!#@6!!#BP!!#?1z!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
-	ListBox list1,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
-	ListBox list1,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S7zzzzzzzzzzzzz!!!"
+	ListBox List1,pos={0.00,105.00},size={300,62},proc=CodeBrowserModule#ListBoxProc
+	ListBox List1,listWave=root:Packages:CodeBrowser:declarations
+	ListBox List1,selCol= 1,widths={4,40},keySelectCol= 1
+	ListBox List1,mode= 5,selRow= 0
+	ListBox List1,help={"Elements matching the search pattern in the selected procedure file(s)"}
+	ListBox List1,userdata(ResizeControlsInfo)= A"!!*'\"!!#@6!!#BP!!#?1z!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
+	ListBox List1,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
+	ListBox List1,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S7zzzzzzzzzzzzz!!!"
 
-	PopupMenu popupProcedure,pos={44,53},size={257.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupProcedures,title="Procedure"
-	PopupMenu popupProcedure,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateProcedureList()"
-	PopupMenu popupProcedure,userdata(ResizeControlsInfo)= A"!!,D?!!#>b!!#B:J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
-	PopupMenu popupProcedure,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
-	PopupMenu popupProcedure,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	PopupMenu PopupProcedure,pos={44,53},size={257.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupProcedures,title="Procedure"
+	PopupMenu PopupProcedure,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateProcedureList()"
+	PopupMenu PopupProcedure,help={"Display elements for this procedure file. Set to <ALL> to select all procedures from the current list."}
+	PopupMenu PopupProcedure,userdata(ResizeControlsInfo)= A"!!,D?!!#>b!!#B:J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu PopupProcedure,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	PopupMenu PopupProcedure,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	PopupMenu popupNamespace,pos={36,10},size={265.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupModules,title="Namespace"
-	PopupMenu popupNamespace,userdata(niceList)=  "<ALL>;ProcGlobal;COMPILE;CodeBrowserModule;"
-	PopupMenu popupNamespace,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateModuleList()"
-	PopupMenu popupNamespace,userdata(ResizeControlsInfo)= A"!!,Ct!!#;-!!#B>J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
-	PopupMenu popupNamespace,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
-	PopupMenu popupNamespace,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	PopupMenu PopupNamespace,pos={36,10},size={265.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupModules,title="Namespace"
+	PopupMenu PopupNamespace,userdata(niceList)=  "<ALL>;ProcGlobal;COMPILE;CodeBrowserModule;"
+	PopupMenu PopupNamespace,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateModuleList()"
+	PopupMenu PopupNamespace,help={"NameSpace of Independent Module or ProcGlobal context. Set to <ALL> to ignore the Namespace."}
+	PopupMenu PopupNamespace,userdata(ResizeControlsInfo)= A"!!,Ct!!#;-!!#B>J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu PopupNamespace,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
+	PopupMenu PopupNamespace,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
 	SetWindow kwTopWin,userdata(ResizeControlsInfo)= A"!!*'\"z!!#BSJ,hqczzzzzzzzzzzzzzzzzzzzz"
 	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzzzzzzzz"
@@ -145,7 +151,7 @@ Function/S generateModuleList()
 	string niceList = getModuleList()
 	niceList = AddListItem(CB_selectAll, niceList)
 
-	PopupMenu popupNamespace, win=$panel, userData($userDataNiceList)=niceList
+	PopupMenu PopupNamespace, win=$panel, userData($userDataNiceList)=niceList
 
 	return niceList
 End
@@ -159,7 +165,7 @@ Function/S generateProcedureList()
 	niceList = AddListItem(CB_selectAll, "")
 
 	getProcedureList(procList, niceList)
-	PopupMenu popupProcedure, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
+	PopupMenu PopupProcedure, win=$panel, userData($userDataRawList)=procList, userData($userDataNiceList)=niceList
 
 	return niceList
 End
@@ -274,22 +280,22 @@ Function/S getCurrentItem([module, procedure, index])
 	endif
 
 	if(module)
-		ControlInfo/W=$panel popupNamespace
+		ControlInfo/W=$panel PopupNamespace
 
 		if(V_Value > 0)
 			return S_Value
 		endif
 	elseif(index)
-		ControlInfo/W=$panel list1
+		ControlInfo/W=$panel List1
 
 		if(V_Value >= 0)
 			return num2str(V_Value)
 		endif
 	elseif(procedure)
-		ControlInfo/W=$panel popupProcedure
+		ControlInfo/W=$panel PopupProcedure
 		V_Value -= 1 // 1-based index
 
-		rawList = GetUserData(panel, "popupProcedure", userDataRawList)
+		rawList = GetUserData(panel, "PopupProcedure", userDataRawList)
 		if(V_Value < 0 || V_Value >= ItemsInList(rawList))
 			if(ItemsInList(rawList) > 0)
 				// fall back to first item
@@ -357,11 +363,11 @@ Function getCurrentItemAsNumeric([module, procedure, index, indexTop])
 	endif
 
 	if(module)
-		ControlInfo/W=$panel popupNamespace
+		ControlInfo/W=$panel PopupNamespace
 	elseif(procedure)
-		ControlInfo/W=$panel popupProcedure
+		ControlInfo/W=$panel PopupProcedure
 	elseif(index || indexTop)
-		ControlInfo/W=$panel list1
+		ControlInfo/W=$panel List1
 	endif
 
 	if(V_Value >= 0)
@@ -390,7 +396,7 @@ Function updatePopup(ctrlName)
 
 	ControlUpdate/W=$panel $ctrlName
 
-	list = GetUserData(panel, "popupProcedure", userDataNiceList)
+	list = GetUserData(panel, "PopupProcedure", userDataNiceList)
 
 	if(ItemsInList(list) == 1)
 		PopupMenu $ctrlName win=$panel, disable=2
@@ -425,7 +431,7 @@ Function popupModules(pa) : PopupMenuControl
 				break
 			endif
 
-			updatePopup("popupProcedure")
+			updatePopup("PopupProcedure")
 
 			if(updateListBoxHook() == 0)
 				procedure = getCurrentItem(procedure = 1)
@@ -463,7 +469,7 @@ Function popupProcedures(pa) : PopupMenuControl
 	return 0
 End
 
-Function checkboxSort(cba) : CheckBoxControl
+Function CheckboxSort(cba) : CheckBoxControl
 	STRUCT WMCheckboxAction &cba
 
 	switch(cba.eventCode)
@@ -479,7 +485,7 @@ End
 
 // returns 0 if checkbox is deselected or 1 if it is selected.
 Function returnCheckBoxSort()
-	ControlInfo/W=$panel checkboxSort
+	ControlInfo/W=$panel CheckboxSort
 	if(V_flag == 2)		// Checkbox found?
 		return V_Value
 	else
@@ -488,7 +494,7 @@ Function returnCheckBoxSort()
 	endif
 End
 
-/// @brief Action procedure for the SetVariable @c setSearch
+/// @brief Action procedure for the SetVariable @c SetSearch
 Function SetVarProcedureSearch(sva) : SetVariableControl
 	STRUCT WMSetVariableAction &sva
 
@@ -507,7 +513,7 @@ Function SetVarProcedureSearch(sva) : SetVariableControl
 	return 0
 End
 
-/// @brief Action procedure for the SetVariable @c setProcedureFilter
+/// @brief Action procedure for the SetVariable @c SetProcedureFilter
 Function SetVarProcedureFilter(sva) : SetVariableControl
 	STRUCT WMSetVariableAction &sva
 
@@ -517,7 +523,7 @@ Function SetVarProcedureFilter(sva) : SetVariableControl
 		case 3: // Live update
 			Variable dval = sva.dval
 			String sval = sva.sval
-			updatePopup("popupProcedure")
+			updatePopup("PopupProcedure")
 			updateListBoxHook()
 			break
 		case -1: // control being killed
@@ -551,10 +557,10 @@ Function listBoxProc(lba) : ListBoxControl
 			break
 		case 4: // cell selection
 		case 5: // cell selection plus shift key
-			ControlInfo/W=$panel list1
+			ControlInfo/W=$panel List1
 			if(V_selCol == 0)
 				// forcefully deselect column zero if it is selected
-				ListBox list1, win=$panel, selCol=1
+				ListBox List1, win=$panel, selCol=1
 			endif
 			break
 		case 12: // keystroke
