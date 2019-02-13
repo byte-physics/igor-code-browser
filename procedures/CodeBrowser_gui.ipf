@@ -4,8 +4,12 @@
 #pragma IndependentModule=CodeBrowserModule
 
 #include <Resize Controls>
-// This file was created by () byte physics Thomas Braun, support@byte-physics.de
-// (c) 2013
+
+// Copyright (c) 2019, () byte physics support@byte-physics.de
+// All rights reserved.
+//
+// This source code is licensed under the BSD 3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
 
 Constant panelWidth    = 307
 Constant panelHeight   = 170

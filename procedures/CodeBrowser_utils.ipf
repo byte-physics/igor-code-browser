@@ -3,8 +3,11 @@
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 
-// This file was created by () byte physics Thomas Braun, support@byte-physics.de
-// (c) 2013
+// Copyright (c) 2019, () byte physics support@byte-physics.de
+// All rights reserved.
+//
+// This source code is licensed under the BSD 3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
 
 // Returns 1 for empty and null strings, zero otherwise
 Function isEmpty(str)
