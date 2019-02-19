@@ -1,33 +1,35 @@
 #pragma rtGlobals=3
-#pragma version=1.0
+#pragma version=1.3
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 
-// This file was created by () byte physics Thomas Braun, support@byte-physics.de
-// (c) 2013
+// Copyright (c) 2019, () byte physics support@byte-physics.de
+// All rights reserved.
+//
+// This source code is licensed under the BSD 3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
 
-static Constant kPrefsVersion = 109
+static Constant kPrefsVersion = 130
 static StrConstant kPackageName = "CodeBrowser"
 static StrConstant kPrefsFileName = "CodeBrowser.bin"
 static Constant kPrefsRecordID = 0
 
 Structure CodeBrowserPrefs
-	uint32	version		// Preferences structure version number. 100 means 1.00.
-	double panelCoords[4]	// left, top, right, bottom
-	uint32 panelCheckboxSort 	// status of checkbox in createPanel()
-	uint32 panelNameSpace	// last marked namespace in panel
-	uint32 panelProcedure	// last marked procedure in panel
-	uint32 panelElement	// last marked element in panel
-	uint32 panelTopElement // top element in listbox (scrolling)
-	uint32 configCleanOnExit // delete CodeBrowser related data when CodeBrowser exits
+	uint32 version                // Preferences structure version number. 100 means 1.00.
+	double panelCoords[4]         // left, top, right, bottom
+	uint32 panelCheckboxSort      // status of checkbox in createPanel()
+	uint32 panelNameSpace         // last marked namespace in panel
+	uint32 panelProcedure         // last marked procedure in panel
+	uint32 panelElement           // last marked element in panel
+	uint32 panelTopElement        // top element in listbox (scrolling)
+	uint32 configCleanOnExit      // delete CodeBrowser related data when CodeBrowser exits
 	uint32 configDebuggingEnabled // enable messages for debugging purpose
-	char   procFilter[40] // procedure filter
-	char   search[40] // search filter
-	uint32 reserved[73] // Reserved for future use
+	char   procFilter[40]         // procedure filter
+	char   search[40]             // search filter
+	uint32 reserved[73]           // Reserved for future use
 EndStructure
 
-//	DefaultPackagePrefsStruct(prefs)
-//	Sets prefs structure to default values.
+// Sets prefs structure to default values.
 static Function DefaultPackagePrefsStruct(prefs)
 	STRUCT CodeBrowserPrefs &prefs
 	Variable scale
@@ -129,8 +131,8 @@ Function LoadPackagePrefsFromDisk(prefs)
 
 	// If error or prefs not found or not valid, initialize them.
 	if(V_flag != 0 || V_bytesRead == 0 || prefs.version != kPrefsVersion)
-		FillPackagePrefsStruct(prefs)	// Set based on panel if it exists or set to default values.
-		SavePackagePrefsToDisk(prefs)	// Create initial prefs record.
+		FillPackagePrefsStruct(prefs) // Set based on panel if it exists or set to default values.
+		SavePackagePrefsToDisk(prefs) // Create initial prefs record.
 	endif
 
 

@@ -1,10 +1,13 @@
 #pragma rtGlobals=3
-#pragma version=1.0
+#pragma version=1.3
 #pragma IgorVersion = 6.3.0
 #pragma IndependentModule=CodeBrowserModule
 
-// This file was created by () byte physics Thomas Braun, support@byte-physics.de
-// (c) 2013
+// Copyright (c) 2019, () byte physics support@byte-physics.de
+// All rights reserved.
+//
+// This source code is licensed under the BSD 3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
 
 static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedures)
 	variable unsavedExp, unsavedNotebooks, unsavedProcedures
@@ -131,22 +134,22 @@ Function panelHook(s)
 	Variable hookResult = 0
 
 	switch(s.eventCode)
-		case 0:				// activate
+		case 0: // activate
 			if(isInitialized())
 				break
 			endif
 			initializePanel()
 			markAsInitialized()
 			break
-		case 2:				// kill
+		case 2: // kill
 			BeforePanelClose()
 			AfterPanelClose()
 			hookResult = 1
 			break
-		case 6:				// resize
+		case 6: // resize
 			hookResult = ResizeControls#ResizeControlsHook(s)
 			break
 	endswitch
 
-	return hookResult		// 0 if nothing done, else 1
+	return hookResult // 0 if nothing done, else 1
 End
