@@ -11,15 +11,12 @@
 // This source code is licensed under the BSD 3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
-Constant panelWidth    = 307
+// define size
+Constant panelWidth    = 300
 Constant panelHeight   = 170
+// define width
 Constant panelLeft     = 100
 Constant panelTop      = 100
-static Constant panelTopHeight= 90
-static Constant panelBorder   = 5
-static Constant moduleCtrlTop = 10
-static Constant procCtrlTop   = 40
-static Constant SortCtrlTop   = 70
 
 static StrConstant panel = "CodeBrowser"
 static StrConstant userDataRawList = "rawList"
@@ -45,14 +42,8 @@ Function createPanel()
 		return NaN
 	endif
 
-	// define position
-	NewPanel/FLT=1/N=$panel /K=1/W=(panelLeft,panelTop,panelLeft+panelWidth,panelTop+panelHeight) // left,top,right,bottom
-	ModifyPanel/W=$panel fixedSize=0
-
-	DefineGuide/W=$panel UGH0={FT,panelTopHeight}
-	DefineGuide/W=$panel UGH1={FB,panelBorder}
-	DefineGuide/W=$panel UGHL={FL,panelBorder}
-	DefineGuide/W=$panel UGHR={FR,panelBorder}
+	// Remove floating if using Resize Controls Panel
+	NewPanel/FLT=1/N=$panel/K=1/W=(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight)
 
 	setGlobalStr("procFilter", prefs.procFilter)
 	setGlobalStr("search", prefs.search)
@@ -73,63 +64,71 @@ Function createPanel()
 End
 
 /// @brief static panel preferences that can be updated by ResizeControls
-///
-/// Note that all functions act on the current top panel
 Function CodeBrowserPanel()
-	SetVariable SetProcedureFilter,pos={72,33},size={229,18},proc=CodeBrowserModule#SetVarProcedureFilter,title="filter"
+	ModifyPanel fixedSize=0
+
+	SetVariable SetProcedureFilter,pos={68,31},size={227,19},proc=CodeBrowserModule#SetVarProcedureFilter,title="Filter"
 	SetVariable SetProcedureFilter,limits={-inf,inf,0},value= root:Packages:CodeBrowser:procFilter,live= 1
 	SetVariable SetProcedureFilter,help={"Filter procedures matching the specified filter pattern from the selected namespace context."}
-	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo)= A"!!,EJ!!#=g!!#At!!#<Hz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo)= A"!!,EB!!#=[!!#Ar!!#<Pz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
 	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
 	SetVariable SetProcedureFilter,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	SetVariable SetSearch,pos={125,81},size={175.00,18.00},proc=CodeBrowserModule#SetVarProcedureSearch,title="search"
-	SetVariable SetSearch,limits={-inf,inf,0},value= root:Packages:CodeBrowser:search,live= 1
-	SetVariable SetSearch,help={"Search for elements in the list below. Search patterns will be automatically appended with leading and trailing wildcards."}
-	SetVariable SetSearch,userdata(ResizeControlsInfo)= A"!!,F_!!#?[!!#A>!!#<Hz!!#](Aon#azzzzzzzzzzzzzz!!#o2B4uAezz"
-	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
-	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
-
-	CheckBox CheckboxSort,pos={77,83},size={36.00,15.00},proc=CodeBrowserModule#CheckboxSort,title="sort"
-	CheckBox CheckboxSort,value= 1
+	CheckBox CheckboxSort,pos={15.00,77.00},size={36.00,15.00},proc=CodeBrowserModule#CheckboxSort,title="Sort"
 	CheckBox CheckboxSort,help={"Sort results alphabetically. Uncheck to sort by line number."}
-	CheckBox CheckboxSort,userdata(ResizeControlsInfo)= A"!!,ET!!#?_!!#=s!!#<(z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
+	CheckBox CheckboxSort,userdata(ResizeControlsInfo)= A"!!,B)!!#?S!!#=s!!#<(z!!#](Aon#azzzzzzzzzzzzzz!!#`-A7TLfzz"
 	CheckBox CheckboxSort,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
 	CheckBox CheckboxSort,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	CheckBox CheckboxSort,value= 1
 
-	ListBox List1,pos={0.00,105.00},size={300,62},proc=CodeBrowserModule#ListBoxProc
+	SetVariable SetSearch,pos={57.00,75.00},size={238.00,18.00},bodyWidth=200,proc=CodeBrowserModule#SetVarProcedureSearch,title="Search"
+	SetVariable SetSearch,help={"Search for elements in the list below. Search patterns will be automatically appended with leading and trailing wildcards."}
+	SetVariable SetSearch,userdata(ResizeControlsInfo)= A"!!,Ds!!#?O!!#B(!!#<Hz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:DuaGl<C]S6zzzzzzzzzz"
+	SetVariable SetSearch,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	SetVariable SetSearch,limits={-inf,inf,0},value= root:Packages:CodeBrowser:search,live= 1
+
+	ListBox List1,pos={5.00,100.00},size={290,65},proc=CodeBrowserModule#ListBoxProc
 	ListBox List1,listWave=root:Packages:CodeBrowser:declarations
 	ListBox List1,selCol= 1,widths={4,40},keySelectCol= 1
 	ListBox List1,mode= 5,selRow= 0
 	ListBox List1,help={"Elements matching the search pattern in the selected procedure file(s)"}
-	ListBox List1,userdata(ResizeControlsInfo)= A"!!*'\"!!#@6!!#BP!!#?1z!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
+	ListBox List1,userdata(ResizeControlsInfo)= A"!!,?X!!#@,!!#BK!!#?;z!!#](Aon\"Qzzzzzzzzzzzzzz!!#o2B4uAezz"
 	ListBox List1,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#N3Bk1ct<C]S6zzzzzzzzzz"
 	ListBox List1,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S7zzzzzzzzzzzzz!!!"
 
-	PopupMenu PopupProcedure,pos={44,53},size={257.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupProcedures,title="Procedure"
+	PopupMenu PopupProcedure,pos={38,52},size={257,17},bodyWidth=200,proc=CodeBrowserModule#popupProcedures,title="Procedure"
 	PopupMenu PopupProcedure,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateProcedureList()"
 	PopupMenu PopupProcedure,help={"Display elements for this procedure file. Set to <ALL> to select all procedures from the current list."}
-	PopupMenu PopupProcedure,userdata(ResizeControlsInfo)= A"!!,D?!!#>b!!#B:J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu PopupProcedure,userdata(ResizeControlsInfo)= A"!!,D'!!#>^!!#B:J,hlkz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
 	PopupMenu PopupProcedure,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
 	PopupMenu PopupProcedure,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
+	PopupMenu PopupProcedure,userdata(niceList)=  "<ALL>"
+	PopupMenu PopupProcedure,userdata(rawList)=  "<ALL>"
 
-	PopupMenu PopupNamespace,pos={36,10},size={265.00,19.00},bodyWidth=200,proc=CodeBrowserModule#popupModules,title="Namespace"
-	PopupMenu PopupNamespace,userdata(niceList)=  "<ALL>;ProcGlobal;COMPILE;CodeBrowserModule;"
-	PopupMenu PopupNamespace,mode=1,popvalue="<ALL>",value= #"CodeBrowserModule#generateModuleList()"
+	PopupMenu PopupNamespace,pos={30,10},size={265,17},bodyWidth=200,proc=CodeBrowserModule#popupModules,title="Namespace"
+	PopupMenu PopupNamespace,userdata(niceList)=  "<ALL>;ProcGlobal;",value= #"CodeBrowserModule#generateModuleList()"
+	PopupMenu PopupNamespace,mode=1,popvalue="<ALL>"
 	PopupMenu PopupNamespace,help={"NameSpace of Independent Module or ProcGlobal context. Set to <ALL> to ignore the Namespace."}
-	PopupMenu PopupNamespace,userdata(ResizeControlsInfo)= A"!!,Ct!!#;-!!#B>J,hm&z!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
+	PopupMenu PopupNamespace,userdata(ResizeControlsInfo)= A"!!,CT!!#;-!!#B>J,hlkz!!#`-A7TLfzzzzzzzzzzzzzz!!#`-A7TLfzz"
 	PopupMenu PopupNamespace,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzz!!#u:Du]k<zzzzzzzzzzz"
 	PopupMenu PopupNamespace,userdata(ResizeControlsInfo) += A"zzz!!#N3Bk1ct<C]S6zzzzzzzzzzzzz!!!"
 
-	SetWindow kwTopWin,userdata(ResizeControlsInfo)= A"!!*'\"z!!#BSJ,hqczzzzzzzzzzzzzzzzzzzzz"
+	// Control area 100 from top, Borders: 5
+	DefineGuide UGH0={FT,100}
+	DefineGuide UGH1={FB,5}
+	DefineGuide UGHL={FL,5}
+	DefineGuide UGHR={FR,5}
+
+	SetWindow kwTopWin,userdata(ResizeControlsInfo)= A"!!*'\"z!!#BP!!#A9zzzzzzzzzzzzzzzzzzzzz"
 	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzzzzzzzz"
 	SetWindow kwTopWin,userdata(ResizeControlsInfo) += A"zzzzzzzzzzzzzzzzzzz!!!"
 	SetWindow kwTopWin,userdata(ResizeControlsGuides)=  "UGH0;UGH1;UGHL;UGHR;"
-	SetWindow kwTopWin,userdata(ResizeControlsInfoUGH0)=  "NAME:UGH0;WIN:CodeBrowser;TYPE:User;HORIZONTAL:1;POSITION:90.00;GUIDE1:FT;GUIDE2:;RELPOSITION:90;"
-	SetWindow kwTopWin,userdata(ResizeControlsInfoUGH1)=  "NAME:UGH1;WIN:CodeBrowser;TYPE:User;HORIZONTAL:1;POSITION:169.00;GUIDE1:FB;GUIDE2:;RELPOSITION:5;"
+	SetWindow kwTopWin,userdata(ResizeControlsInfoUGH0)=  "NAME:UGH0;WIN:CodeBrowser;TYPE:User;HORIZONTAL:1;POSITION:100.00;GUIDE1:FT;GUIDE2:;RELPOSITION:100;"
+	SetWindow kwTopWin,userdata(ResizeControlsInfoUGH1)=  "NAME:UGH1;WIN:CodeBrowser;TYPE:User;HORIZONTAL:1;POSITION:170.00;GUIDE1:FB;GUIDE2:;RELPOSITION:5;"
 	SetWindow kwTopWin,userdata(oneTimeInit)=  "1"
 	SetWindow kwTopWin,userdata(ResizeControlsInfoUGHL)=  "NAME:UGHL;WIN:CodeBrowser;TYPE:User;HORIZONTAL:0;POSITION:5.00;GUIDE1:FL;GUIDE2:;RELPOSITION:5;"
-	SetWindow kwTopWin,userdata(ResizeControlsInfoUGHR)=  "NAME:UGHR;WIN:CodeBrowser;TYPE:User;HORIZONTAL:0;POSITION:307.00;GUIDE1:FR;GUIDE2:;RELPOSITION:5;"
+	SetWindow kwTopWin,userdata(ResizeControlsInfoUGHR)=  "NAME:UGHR;WIN:CodeBrowser;TYPE:User;HORIZONTAL:0;POSITION:300.00;GUIDE1:FR;GUIDE2:;RELPOSITION:5;"
 
 	SetWindow kwTopWin, hook(mainHook)=CodeBrowserModule#panelHook
 	SetActiveSubwindow _endfloat_
