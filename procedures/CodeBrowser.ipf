@@ -1470,3 +1470,8 @@ static Structure procedure
 	String module
 	String fullName
 Endstructure
+
+/// @brief compile all procedures
+Function compile()
+	Execute/P/Z/Q "COMPILEPROCEDURES "
+End
