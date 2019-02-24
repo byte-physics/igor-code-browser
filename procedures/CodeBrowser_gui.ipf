@@ -57,6 +57,7 @@ Function createPanel()
 	PopupMenu PopupNamespace, win=$panel, mode=prefs.panelNameSpace
 	PopupMenu PopupProcedure, win=$panel, mode=prefs.panelProcedure
 	ListBox List1, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
+	Checkbox CheckboxSort, win=$panel, value=prefs.panelCheckboxSort
 
 	resizeToPackagePrefs()
 	DoUpdate/W=$panel
