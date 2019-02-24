@@ -38,6 +38,8 @@ Function createPanel()
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
 
+	compile()
+
 	if(existsPanel())
 		DoWindow/F $panel
 		return NaN
