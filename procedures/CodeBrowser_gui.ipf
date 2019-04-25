@@ -30,10 +30,20 @@ Function/S GetPanel()
 	return panel
 End
 
+Function ResetPanel()
+	KillWindow $GetPanel()
+	ResetPackagePrefs()
+	CreatePanel(resize=0)
+End
+
 // Creates the main panel
-Function createPanel()
+Function createPanel([resize])
+	variable resize
+
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
+
+	resize = ParamIsDefault(resize) ? 1 : !!resize
 
 	compile()
 
@@ -42,8 +52,7 @@ Function createPanel()
 		return NaN
 	endif
 
-	// Remove floating if using Resize Controls Panel
-	NewPanel/FLT=1/N=$panel/K=1/W=(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight)
+	NewPanel/N=$panel/K=1/W=(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight)
 
 	setGlobalStr("procFilter", prefs.procFilter)
 	setGlobalStr("search", prefs.search)
@@ -59,7 +68,9 @@ Function createPanel()
 	ListBox List1, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
 	Checkbox CheckboxSort, win=$panel, value=prefs.panelCheckboxSort
 
-	resizeToPackagePrefs()
+	if(resize)
+		resizeToPackagePrefs()
+	endif
 	DoUpdate/W=$panel
 	initializePanel()
 End
@@ -132,7 +143,6 @@ Function CodeBrowserPanel()
 	SetWindow kwTopWin,userdata(ResizeControlsInfoUGHR)=  "NAME:UGHR;WIN:CodeBrowser;TYPE:User;HORIZONTAL:0;POSITION:300.00;GUIDE1:FR;GUIDE2:;RELPOSITION:5;"
 
 	SetWindow kwTopWin, hook(mainHook)=CodeBrowserModule#panelHook
-	SetActiveSubwindow _endfloat_
 End
 
 Function resizeToPackagePrefs()
