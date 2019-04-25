@@ -42,8 +42,7 @@ Function createPanel()
 		return NaN
 	endif
 
-	// Remove floating if using Resize Controls Panel
-	NewPanel/FLT=1/N=$panel/K=1/W=(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight)
+	NewPanel/N=$panel/K=1/W=(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight)
 
 	setGlobalStr("procFilter", prefs.procFilter)
 	setGlobalStr("search", prefs.search)
@@ -132,7 +131,6 @@ Function CodeBrowserPanel()
 	SetWindow kwTopWin,userdata(ResizeControlsInfoUGHR)=  "NAME:UGHR;WIN:CodeBrowser;TYPE:User;HORIZONTAL:0;POSITION:300.00;GUIDE1:FR;GUIDE2:;RELPOSITION:5;"
 
 	SetWindow kwTopWin, hook(mainHook)=CodeBrowserModule#panelHook
-	SetActiveSubwindow _endfloat_
 End
 
 Function resizeToPackagePrefs()
