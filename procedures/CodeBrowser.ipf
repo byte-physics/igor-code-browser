@@ -12,6 +12,7 @@
 Menu "CodeBrowser"
 	// CTRL+0 is the keyboard shortcut
 	"Open/0", /Q, CodeBrowserModule#CreatePanel()
+	"Reset", /Q, CodeBrowserModule#ResetPanel()
 End
 
 // Markers for the different listbox elements

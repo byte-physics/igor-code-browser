@@ -30,10 +30,20 @@ Function/S GetPanel()
 	return panel
 End
 
+Function ResetPanel()
+	KillWindow $GetPanel()
+	ResetPackagePrefs()
+	CreatePanel(resize=0)
+End
+
 // Creates the main panel
-Function createPanel()
+Function createPanel([resize])
+	variable resize
+
 	STRUCT CodeBrowserPrefs prefs
 	LoadPackagePrefsFromDisk(prefs)
+
+	resize = ParamIsDefault(resize) ? 1 : !!resize
 
 	compile()
 
@@ -58,7 +68,9 @@ Function createPanel()
 	ListBox List1, win=$panel, selRow=prefs.panelElement, row=prefs.panelTopElement
 	Checkbox CheckboxSort, win=$panel, value=prefs.panelCheckboxSort
 
-	resizeToPackagePrefs()
+	if(resize)
+		resizeToPackagePrefs()
+	endif
 	DoUpdate/W=$panel
 	initializePanel()
 End
