@@ -1124,10 +1124,10 @@ Function loadProcedures(fullName)
 	Wave/T procs = getProcWave()
 	WAVE/T helps = getHelpWave()
 
-	Make/FREE/T/N=(1, 2) fullDecls
-	Make/FREE/I/N=(1, 1) fullLines
-	Make/FREE/T/N=(1, 1) fullProcs
-	Make/FREE/T/N=(1, 2) fullHelps
+	Make/FREE/T/N=(0, 2) fullDecls
+	Make/FREE/I/N=(0, 1) fullLines
+	Make/FREE/T/N=(0, 1) fullProcs
+	Make/FREE/T/N=(0, 2) fullHelps
 
 	procList = fullName
 	if(!cmpstr(fullName, CB_selectAll))
