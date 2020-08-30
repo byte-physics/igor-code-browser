@@ -122,7 +122,11 @@ Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 	if(ptype == 0x5)
 		return "imag"
 	elseif(ptype == 0x1005)
-		return "imag&"
+		if(paramOrReturn)
+			return "imag&"
+		else
+			return "imag"
+		endif
 	endif
 
 	if(ptype & 0x2000)
@@ -145,7 +149,7 @@ Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 		typeStr += " imag"
 	endif
 
-	if(ptype & 0x1000)
+	if(paramOrReturn && (ptype & 0x1000))
 		typeStr += "&"
 	endif
 
