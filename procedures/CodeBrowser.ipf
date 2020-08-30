@@ -156,6 +156,37 @@ Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 	return typeStr
 End
 
+/// @brief Create a string representing the return types
+Function/S interpretReturnType(returnTypeString, funcInfo)
+	string returnTypeString, funcInfo
+
+	variable j, numReturnTypes
+	string returnTypes, str, returnTypeInfoString
+	string returnType = ""
+
+	returnTypeInfoString = StringByKey("RETURNTYPE", funcInfo)
+	if(!cmpstr(returnTypeInfoString[0], "["))
+		// multiple return values ala [4100, 4100]
+		returnTypes = returnTypeInfoString[1, strlen(returnTypeInfoString) - 2]
+		numReturnTypes = ItemsInList(returnTypes, ",")
+		for(j = 0; j < numReturnTypes; j += 1)
+			str = StringFromList(j, returnTypes, ",")
+			returnType += interpretParamType(str2num(str), 0, funcInfo)
+			if(j < numReturnTypes - 1)
+				returnType += ", "
+			endif
+		endfor
+
+		if(numReturnTypes <= 1)
+			return returnType
+		else
+			return "(" + returnType + ")"
+		endif
+	endif
+
+	return interpretParamType(str2num(returnTypeInfoString), 0, funcInfo)
+End
+
 // Convert the SPECIAL tag from FunctionInfo
 Function/S interpretSpecialTag(specialTag)
 	string specialTag
@@ -366,7 +397,7 @@ Function addDecoratedFunctions(procedure, declWave, lineWave)
 		if(isEmpty(fi))
 			debugPrint("macro or other error for " + procedure.module + "#" + func)
 		endif
-		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi), 0, fi)
+		returnType    = interpretReturnType(StringByKey("RETURNTYPE", fi), fi)
 		threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
 		specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
