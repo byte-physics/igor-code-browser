@@ -475,10 +475,13 @@ Function popupProcedures(pa) : PopupMenuControl
 				break
 			endif
 
+			if(!cmpstr(procedure, CB_selectAll))
+				break
+			endif
+
 			if(updateListBoxHook() == 0)
-				if(!!cmpstr(procedure, CB_selectAll))
-					DisplayProcedure/W=$procedure
-				endif
+				procedure = getCurrentItem(procedure = 1)
+				DisplayProcedure/W=$procedure
 			endif
 			break
 	endswitch

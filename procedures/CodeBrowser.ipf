@@ -62,6 +62,7 @@ StrConstant CB_selectAll = "<ALL>"
 
 // List of igor7 structure elements.
 static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
+
 // Loosely based on the WM procedure from the documentation
 // Returns a human readable string for the given parameter/return type.
 // See the documentation for FunctionInfo for the exact values.
@@ -121,7 +122,11 @@ Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 	if(ptype == 0x5)
 		return "imag"
 	elseif(ptype == 0x1005)
-		return "imag&"
+		if(paramOrReturn)
+			return "imag&"
+		else
+			return "imag"
+		endif
 	endif
 
 	if(ptype & 0x2000)
@@ -144,11 +149,42 @@ Function/S interpretParamType(ptype, paramOrReturn, funcInfo)
 		typeStr += " imag"
 	endif
 
-	if(ptype & 0x1000)
+	if(paramOrReturn && (ptype & 0x1000))
 		typeStr += "&"
 	endif
 
 	return typeStr
+End
+
+/// @brief Create a string representing the return types
+Function/S interpretReturnType(returnTypeString, funcInfo)
+	string returnTypeString, funcInfo
+
+	variable j, numReturnTypes
+	string returnTypes, str, returnTypeInfoString
+	string returnType = ""
+
+	returnTypeInfoString = StringByKey("RETURNTYPE", funcInfo)
+	if(!cmpstr(returnTypeInfoString[0], "["))
+		// multiple return values ala [4100, 4100]
+		returnTypes = returnTypeInfoString[1, strlen(returnTypeInfoString) - 2]
+		numReturnTypes = ItemsInList(returnTypes, ",")
+		for(j = 0; j < numReturnTypes; j += 1)
+			str = StringFromList(j, returnTypes, ",")
+			returnType += interpretParamType(str2num(str), 0, funcInfo)
+			if(j < numReturnTypes - 1)
+				returnType += ", "
+			endif
+		endfor
+
+		if(numReturnTypes <= 1)
+			return returnType
+		else
+			return "(" + returnType + ")"
+		endif
+	endif
+
+	return interpretParamType(str2num(returnTypeInfoString), 0, funcInfo)
 End
 
 // Convert the SPECIAL tag from FunctionInfo
@@ -361,7 +397,7 @@ Function addDecoratedFunctions(procedure, declWave, lineWave)
 		if(isEmpty(fi))
 			debugPrint("macro or other error for " + procedure.module + "#" + func)
 		endif
-		returnType    = interpretParamType(NumberByKey("RETURNTYPE", fi), 0, fi)
+		returnType    = interpretReturnType(StringByKey("RETURNTYPE", fi), fi)
 		threadsafeTag = interpretThreadsafeTag(StringByKey("THREADSAFE", fi))
 		specialTag    = interpretSpecialTag(StringByKey("SPECIAL", fi))
 		subtypeTag    = interpretSubtypeTag(StringByKey("SUBTYPE", fi))
@@ -1124,10 +1160,10 @@ Function loadProcedures(fullName)
 	Wave/T procs = getProcWave()
 	WAVE/T helps = getHelpWave()
 
-	Make/FREE/T/N=(1, 2) fullDecls
-	Make/FREE/I/N=(1, 1) fullLines
-	Make/FREE/T/N=(1, 1) fullProcs
-	Make/FREE/T/N=(1, 2) fullHelps
+	Make/FREE/T/N=(0, 2) fullDecls
+	Make/FREE/I/N=(0, 1) fullLines
+	Make/FREE/T/N=(0, 1) fullProcs
+	Make/FREE/T/N=(0, 2) fullHelps
 
 	procList = fullName
 	if(!cmpstr(fullName, CB_selectAll))
