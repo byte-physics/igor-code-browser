@@ -33,6 +33,11 @@ End
 Function ResetPanel()
 	KillWindow $GetPanel()
 	ResetPackagePrefs()
+
+	KillStorage()
+	KillPanelObjects()
+	DeletePKGfolder()
+
 	CreatePanel(resize=0)
 End
 
@@ -44,8 +49,6 @@ Function createPanel([resize])
 	LoadPackagePrefsFromDisk(prefs)
 
 	resize = ParamIsDefault(resize) ? 1 : !!resize
-
-	compile()
 
 	if(existsPanel())
 		DoWindow/F $panel
@@ -301,6 +304,8 @@ Function/S getCurrentItem([module, procedure, index])
 
 		if(V_Value > 0)
 			return S_Value
+		else
+			return CB_selectAll
 		endif
 	elseif(index)
 		ControlInfo/W=$panel List1

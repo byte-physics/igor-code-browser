@@ -15,6 +15,11 @@ Menu "CodeBrowser"
 	"Reset", /Q, CodeBrowserModule#ResetPanel()
 End
 
+Constant ROWS = 0
+Constant COLS = 1
+Constant LAYERS = 2
+Constant CHUNKS = 3
+
 // Markers for the different listbox elements
 StrConstant strConstantMarker = "\\W539"
 StrConstant constantMarker    = "\\W534"
@@ -59,6 +64,8 @@ static Constant CsaveMaximum = 1024
 Constant    openKey           = 46 // ".", the dot
 
 StrConstant CB_selectAll = "<ALL>"
+
+static StrConstant TAG_UNCOMPILED = "?"
 
 // List of igor7 structure elements.
 static strConstant cstrTypes = "Variable|String|WAVE|NVAR|SVAR|DFREF|FUNCREF|STRUCT|char|uchar|int16|uint16|int32|uint32|int64|uint64|float|double"
@@ -804,6 +811,32 @@ static Function saveResults(procedure)
 	endif
 End
 
+static Function/S AddUncompiledTag(string marker)
+
+	if(IsEmpty(marker))
+		return marker
+	endif
+
+	if(CmpStr(marker[strlen(marker) - 1], TAG_UNCOMPILED))
+		return marker + TAG_UNCOMPILED
+	endif
+
+	return marker
+End
+
+static Function/S RemoveUncompiledTag(string marker)
+
+	if(IsEmpty(marker))
+		return marker
+	endif
+
+	if(!CmpStr(marker[strlen(marker) - 1], TAG_UNCOMPILED))
+		return marker[0, strlen(marker) - 2]
+	endif
+
+	return marker
+End
+
 // Load the specified procedure from storage waves
 //
 // return errorCode
@@ -815,8 +848,8 @@ End
 static Function saveLoad(procedure)
 	STRUCT procedure &procedure
 
-	Variable numResults
-	string CheckSum
+	Variable numResults, isCompiled_
+	string CheckSum, marker
 
 	Wave/T declWave = getDeclWave()
 	Wave/I lineWave = getLineWave()
@@ -832,7 +865,21 @@ static Function saveLoad(procedure)
 		debugPrint("save state not found")
 		return -1
 	endif
-	if(isCompiled() && !SaveVariablesWave[procedure.row][0])
+
+	WAVE/T load0 = SaveWavesWave[procedure.row][0]
+	WAVE/I load1 = SaveWavesWave[procedure.row][1]
+	WAVE/T load2 = SaveWavesWave[procedure.row][2]
+
+	isCompiled_ = isCompiled()
+	if(DimSize(load0, ROWS))
+		if(isCompiled_)
+			load0[][0] = RemoveUncompiledTag(load0[p][0])
+		else
+			load0[][0] = AddUncompiledTag(load0[p][0])
+		endif
+	endif
+
+	if(!SaveVariablesWave[procedure.row][%VALID])
 		// procedure marked as not valid by
 		// AfterCompiledHook --> updatePanel --> saveReParse
 		// --> CheckSum needs to be compared.
@@ -842,13 +889,13 @@ static Function saveLoad(procedure)
 			return -1
 		endif
 		CheckSum = getCheckSum()
-		if(!!cmpstr(SaveStringsWave[procedure.row][1], CheckSum))
-			debugPrint("CheckSum missmatch: Procedure has to be reloaded.")
+		if(CmpStr(SaveStringsWave[procedure.row][1], CheckSum) && isCompiled_)
+			debugPrint("CheckSum mismatch: Procedure has to be reloaded.")
 			return -2
 		endif
 		debugPrint("CheckSum match: " + CheckSum)
 
-		SaveVariablesWave[procedure.row][0] = 1
+		SaveVariablesWave[procedure.row][%VALID] = 1
 		debugPrint("Procedure " + procedure.fullname + " marked as valid.")
 	endif
 
@@ -859,9 +906,6 @@ static Function saveLoad(procedure)
 		return 0
 	endif
 
-	WAVE/T load0 = SaveWavesWave[procedure.row][0]
-	WAVE/I load1 = SaveWavesWave[procedure.row][1]
-	WAVE/T load2 = SaveWavesWave[procedure.row][2]
 	declWave[][0, 1] = load0[p][q]
 	lineWave[] = load1[p]
 	helpWave[][0, 1] = load2[p][q]
@@ -1390,7 +1434,10 @@ static Function/Wave getSaveVariables()
 		// Column 1: valid (0: no, 1: yes) used to mark waves for parsing after "compile" was done.
 		// Column 2: time for parsing (time consumption of compilation in us)
 		// Column 3: time for checksum
-		Make/N=(0,3) dfr:$CsaveVariables/Wave=wv
+		Make/N=(0, 3) dfr:$CsaveVariables/Wave=wv
+		SetDimLabel COLS, 0, VALID, wv
+		SetDimLabel COLS, 1, PARSINGTIME, wv
+		SetDimLabel COLS, 2, CHECKSUMTIME, wv
 	endif
 
 	return wv
@@ -1471,8 +1518,3 @@ static Structure procedure
 	String module
 	String fullName
 Endstructure
-
-/// @brief compile all procedures
-Function compile()
-	Execute/P/Z/Q "COMPILEPROCEDURES "
-End
