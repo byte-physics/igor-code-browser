@@ -9,6 +9,14 @@
 // This source code is licensed under the BSD 3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
+static Function AfterCompiledHook()
+
+	if(!existsPanel())
+		saveReParse()
+		loadProcedures(CB_selectAll)
+	endif
+End
+
 static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedures)
 	variable unsavedExp, unsavedNotebooks, unsavedProcedures
 
@@ -95,13 +103,7 @@ Function AfterPanelClose()
 		return 0
 	endif
 
-	cleanOnExit = !!getGlobalVar("cleanOnExit")
 	QuitPackagePrefs()
-	if(cleanOnExit)
-		KillStorage()
-		KillPanelObjects()
-		DeletePKGfolder()
-	endif
 End
 
 // Kill panel-bound variables and waves
