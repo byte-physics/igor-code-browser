@@ -20,31 +20,16 @@ End
 static Function IgorBeforeQuitHook(unsavedExp, unsavedNotebooks, unsavedProcedures)
 	variable unsavedExp, unsavedNotebooks, unsavedProcedures
 
-	string expName
+	variable modified
 
-	debugPrint("called")
-	debugPrint("unsavedExp: " + num2str(unsavedExp))
+	ExperimentModified
+	modified = V_flag
 
 	BeforePanelClose()
 	DoWindow/K CodeBrowser
 	AfterPanelClose()
 
-	if(unsavedExp || unsavedNotebooks || unsavedProcedures)
-		return 0
-	endif
-
-	expName = IgorInfo(1)
-	if(!cmpstr(expName, "Untitled"))
-		return 0
-	endif
-
-	// experiment saved and pxp still exists -> silently save it
-	// does not support unpacked experiments
-	GetFileFolderInfo/P=home/Q/Z expName + ".pxp"
-	if(!V_Flag)
-		SaveExperiment
-		return 1
-	endif
+	ExperimentModified modified
 
 	return 0
 End
