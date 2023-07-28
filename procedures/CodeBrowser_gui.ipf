@@ -421,9 +421,9 @@ Function updatePopup(ctrlName)
 	list = GetUserData(panel, "PopupProcedure", userDataNiceList)
 
 	if(ItemsInList(list) == 1)
-		PopupMenu $ctrlName win=$panel, disable=2
+		PopupMenu $ctrlName, win=$panel, disable=2
 	else
-		PopupMenu $ctrlName win=$panel, disable=0
+		PopupMenu $ctrlName, win=$panel, disable=0
 	endif
 
 	// try to restore the previously selected item if it differs from the current one
@@ -431,9 +431,9 @@ Function updatePopup(ctrlName)
 
 	if(newIndex != index) // only update if required, as the update triggers the list generating function
 		if(newIndex > 0)
-			PopupMenu $ctrlName win=$panel, mode=newIndex
+			PopupMenu $ctrlName, win=$panel, mode=newIndex
 		else
-			PopupMenu $ctrlName win=$panel, mode=1
+			PopupMenu $ctrlName, win=$panel, mode=1
 		endif
 	endif
 End

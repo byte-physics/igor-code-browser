@@ -73,7 +73,7 @@ static Function SyncPackagePrefsStruct(prefs)
 	// Panel does exists. Set prefs to match panel settings.
 	prefs.version = kPrefsVersion
 
-	GetWindow $GetPanel() wsize // returns points
+	GetWindow $GetPanel(), wsize // returns points
 
 #if (IgorVersion() >= 7.0)
 	scale = ScreenResolution / PanelResolution(GetPanel())
